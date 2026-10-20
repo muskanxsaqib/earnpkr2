@@ -21,6 +21,7 @@ next-env.d.ts.bak
 # Testing & Coverage
 /coverage
 *.lcov
+*.zip
 
 # Environment Variables & Secrets (CRITICAL FOR CLIENT RESALE)
 .env
