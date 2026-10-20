@@ -1,0 +1,737 @@
+@import "tailwindcss";
+
+@theme {
+  --font-arabic: 'Noto Nastaliq Urdu', serif;
+}
+
+/* ============================================================================
+   1. ROOT VARIABLES & DEFAULT TYPOGRAPHY TOKENS
+   ============================================================================ */
+:root {
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .custom-scrollbar::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .custom-scrollbar,
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+  background-color: #e4e7ec;
+  color: #1e2330;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+.app-main-canvas {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  transform: translateZ(0);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+code, pre, .font-mono-code {
+  font-family: var(--font-mono);
+}
+
+@keyframes marquee {
+  0% { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 25s linear infinite;
+}
+
+/* ============================================================================
+   2. CORE TACTILE NEUMORPHIC & FROSTED GLASS UTILITY CLASSES
+   (Directly from Astro-Neumorphic OS & Glass UI Spec)
+   ============================================================================ */
+
+/* Raised Matte Neumorphic Card */
+.neu-card {
+  background: linear-gradient(145deg, #eef1f6, #dcdfe6);
+  box-shadow:
+    8px 8px 18px #c5c9d2,
+    -8px -8px 18px #ffffff,
+    inset 1px 1px 2px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+/* Small Raised Neumorphic Pill */
+.neu-pill {
+  background: linear-gradient(145deg, #f2f5fa, #d9dde4);
+  box-shadow:
+    3px 3px 7px #c4c8d1,
+    -3px -3px 7px #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.neu-pill:active,
+.neu-pill.active {
+  box-shadow:
+    inset 2px 2px 5px #c4c8d1,
+    inset -2px -2px 5px #ffffff;
+  transform: scale(0.96);
+}
+
+/* Tactile Mini Button */
+.neu-btn-mini {
+  background: linear-gradient(145deg, #f4f7fc, #d8dce3);
+  box-shadow:
+    3px 3px 6px #c2c6cf,
+    -3px -3px 6px #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  transition: transform 0.12s ease;
+}
+
+.neu-btn-mini:active {
+  box-shadow:
+    inset 2px 2px 5px #c2c6cf,
+    inset -2px -2px 5px #ffffff;
+  transform: scale(0.93);
+}
+
+/* Recessed Neumorphic Well */
+.neu-inset {
+  background: #dfe3ea;
+  box-shadow:
+    inset 4px 4px 8px #c3c7d0,
+    inset -4px -4px 8px #fbfdff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Deep Space Glass Window */
+.astro-window {
+  background: radial-gradient(circle at 75% 25%, #1e2642 0%, #0e1220 55%, #070911 100%);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.85),
+    inset 0 0 20px rgba(56, 189, 248, 0.14),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 2px solid #cfd5e0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glowing Cyan & Green Indicators */
+.led-cyan {
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+}
+
+.led-green {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+/* Frosted Glass Dock & Modal */
+.glass-dock {
+  background: rgba(235, 239, 245, 0.88);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow:
+    0 10px 25px rgba(20, 25, 40, 0.1),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.glass-modal {
+  background: rgba(235, 239, 245, 0.94);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    0 20px 45px rgba(15, 20, 35, 0.22),
+    inset 0 2px 3px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+/* Base 3D Acrylic Frame & Plush Pillow Containers (Zero Scroll-Jank) */
+.acrylic-frame {
+  background: rgba(255, 255, 255, 0.78);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.07),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+  padding: 6px;
+}
+
+.plush-pillow {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 1),
+    0 6px 16px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+/* ============================================================================
+   3. AMBIENT RGB PERIMETER GLOW (.rgb-enabled & .rgb-light-on)
+   GPU-friendly zero-repaint multi-tone rim for 60/120fps mobile scrolling
+   ============================================================================ */
+.rgb-container {
+  position: relative;
+  border-radius: 1.5rem;
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.rgb-enabled .rgb-container,
+.rgb-light-on .rgb-container {
+  padding: 1.5px;
+  background: linear-gradient(135deg, #ff0055 0%, #00f0ff 35%, #3b82f6 68%, #ffcc00 100%);
+  box-shadow: 0 6px 18px -4px rgba(56, 189, 248, 0.18), 0 4px 12px -2px rgba(236, 72, 153, 0.14);
+}
+
+body.rgb-light-on .acrylic-frame {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 12px 28px rgba(56, 189, 248, 0.12), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================================================
+   4. SEVEN CURATED VISUAL THEME PACKS (FULL APP SURFACE STYLING)
+   Applies tactile neumorphic & glass surfaces across existing cards, wells,
+   headers, docks, inputs, and buttons without altering app components
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   THEME 1: ASTRO-NEUMORPHIC OS (Tactile Matte Slate, Recessed Wells & Glass Dock)
+   ---------------------------------------------------------------------------- */
+body.theme-astro-neu,
+body.theme-astro-neu .app-main-canvas {
+  background-color: #e4e7ec !important;
+  background-image:
+    radial-gradient(at 15% 10%, rgba(255, 255, 255, 0.9) 0px, transparent 50%),
+    radial-gradient(at 85% 90%, rgba(190, 200, 218, 0.65) 0px, transparent 55%) !important;
+  color: #1e2330;
+}
+
+/* Let page-level wrappers show the Astro-Neumorphic radial backdrop */
+body.theme-astro-neu .min-h-screen.bg-slate-50,
+body.theme-astro-neu .min-h-full.bg-slate-50 {
+  background: transparent !important;
+}
+
+/* Raised Matte Neumorphic Cards across the app */
+body.theme-astro-neu .acrylic-frame,
+body.theme-astro-neu .rgb-container > .bg-white,
+body.theme-astro-neu .rgb-container > .bg-white\/90,
+body.theme-astro-neu .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-astro-neu .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-astro-neu .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-astro-neu .bg-white\/90.rounded-\[22px\]:not(.studio-item-card),
+body.theme-astro-neu .bg-white\/95.rounded-2xl:not(.studio-item-card),
+body.theme-astro-neu .bg-white\/95.rounded-3xl:not(.studio-item-card),
+body.theme-astro-neu .bg-white\/80.rounded-2xl:not(.studio-item-card),
+body.theme-astro-neu .bg-white\/80.rounded-3xl:not(.studio-item-card) {
+  background: linear-gradient(145deg, #eef1f6, #dcdfe6) !important;
+  box-shadow:
+    7px 7px 16px #c5c9d2,
+    -7px -7px 16px #ffffff,
+    inset 1px 1px 2px rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+}
+
+body.theme-astro-neu .plush-pillow {
+  background: linear-gradient(145deg, #f2f5fa 0%, #e1e5ec 100%) !important;
+  box-shadow:
+    inset 1px 1px 3px rgba(255, 255, 255, 0.95),
+    5px 5px 12px #c5c9d2,
+    -5px -5px 12px #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #1e2330 !important;
+}
+
+/* Recessed Neumorphic Wells (.neu-inset) for inner stat boxes & inputs */
+body.theme-astro-neu .bg-slate-50.rounded-xl:not(.studio-item-card),
+body.theme-astro-neu .bg-slate-50.rounded-2xl:not(.studio-item-card),
+body.theme-astro-neu .bg-slate-100.rounded-xl:not(.studio-item-card),
+body.theme-astro-neu .bg-slate-100.rounded-2xl:not(.studio-item-card),
+body.theme-astro-neu .shadow-inner,
+body.theme-astro-neu input:not([type="checkbox"]):not([type="radio"]),
+body.theme-astro-neu select,
+body.theme-astro-neu textarea {
+  background: #dfe3ea !important;
+  box-shadow:
+    inset 4px 4px 8px #c3c7d0,
+    inset -4px -4px 8px #fbfdff !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  color: #1e2330 !important;
+}
+
+/* Frosted Glass Dock, Sidebar & Header (.glass-dock) */
+body.theme-astro-neu header,
+body.theme-astro-neu .app-bottom-nav,
+body.theme-astro-neu .app-sidebar {
+  background: rgba(235, 239, 245, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow:
+    0 15px 35px rgba(20, 25, 40, 0.1),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Sidebar & Bottom Nav Buttons in Astro-Neu */
+body.theme-astro-neu .app-sidebar-nav-btn:not(.is-active) {
+  background: linear-gradient(145deg, #f4f6fb, #dfe3eb) !important;
+  box-shadow:
+    4px 4px 9px #c5c9d2,
+    -4px -4px 9px #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #1e293b !important;
+}
+body.theme-astro-neu .app-sidebar-nav-btn:not(.is-active):hover {
+  color: #0F7A50 !important;
+  background: linear-gradient(145deg, #ffffff, #e6ebf2) !important;
+}
+body.theme-astro-neu .app-bottom-nav-btn:not(.is-active) {
+  color: #1e293b !important;
+}
+
+/* Tactile Raised Neumorphic Pills & Secondary Buttons (.neu-pill) */
+body.theme-astro-neu button.bg-slate-50,
+body.theme-astro-neu button.bg-slate-100,
+body.theme-astro-neu button.bg-white {
+  background: linear-gradient(145deg, #f2f5fa, #d9dde4) !important;
+  box-shadow:
+    3px 3px 7px #c4c8d1,
+    -3px -3px 7px #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #1e293b !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+body.theme-astro-neu button.bg-slate-50:active,
+body.theme-astro-neu button.bg-slate-100:active,
+body.theme-astro-neu button.bg-white:active {
+  box-shadow:
+    inset 3px 3px 6px #c4c8d1,
+    inset -3px -3px 6px #ffffff !important;
+  transform: scale(0.96);
+}
+
+/* ----------------------------------------------------------------------------
+   THEME 2: ASTRO-GLASS UI (Frosted Crystal Glass, Specular Rim & Cyber Glow)
+   ---------------------------------------------------------------------------- */
+body.theme-astro-glass,
+body.theme-astro-glass .app-main-canvas {
+  background-color: #dbe4f0 !important;
+  background-image:
+    radial-gradient(at 12% 15%, rgba(255, 255, 255, 0.95) 0px, transparent 48%),
+    radial-gradient(at 88% 20%, rgba(186, 230, 253, 0.7) 0px, transparent 50%),
+    radial-gradient(at 50% 90%, rgba(199, 210, 254, 0.65) 0px, transparent 55%) !important;
+  color: #0f172a;
+}
+
+body.theme-astro-glass .min-h-screen.bg-slate-50,
+body.theme-astro-glass .min-h-full.bg-slate-50 {
+  background: transparent !important;
+}
+
+/* Frosted Glass Cards (.glass-modal / .glass-dock aesthetic without scroll lag) */
+body.theme-astro-glass .acrylic-frame,
+body.theme-astro-glass .rgb-container > .bg-white,
+body.theme-astro-glass .rgb-container > .bg-white\/90,
+body.theme-astro-glass .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-astro-glass .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-astro-glass .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-astro-glass .bg-white\/90.rounded-\[22px\]:not(.studio-item-card),
+body.theme-astro-glass .bg-white\/95.rounded-2xl:not(.studio-item-card),
+body.theme-astro-glass .bg-white\/95.rounded-3xl:not(.studio-item-card),
+body.theme-astro-glass .bg-white\/80.rounded-2xl:not(.studio-item-card),
+body.theme-astro-glass .bg-white\/80.rounded-3xl:not(.studio-item-card) {
+  background: linear-gradient(145deg, rgba(250, 253, 255, 0.94), rgba(235, 243, 253, 0.9)) !important;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.08),
+    inset 0 2px 3px rgba(255, 255, 255, 0.95),
+    0 3px 10px rgba(56, 189, 248, 0.07) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.92) !important;
+}
+
+body.theme-astro-glass .plush-pillow {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(242, 247, 255, 0.92)) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.98),
+    0 8px 20px rgba(15, 23, 42, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Recessed Glass Wells */
+body.theme-astro-glass .bg-slate-50.rounded-xl:not(.studio-item-card),
+body.theme-astro-glass .bg-slate-50.rounded-2xl:not(.studio-item-card),
+body.theme-astro-glass .bg-slate-100.rounded-xl:not(.studio-item-card),
+body.theme-astro-glass .bg-slate-100.rounded-2xl:not(.studio-item-card),
+body.theme-astro-glass .shadow-inner,
+body.theme-astro-glass input:not([type="checkbox"]):not([type="radio"]),
+body.theme-astro-glass select,
+body.theme-astro-glass textarea {
+  background: rgba(225, 234, 246, 0.88) !important;
+  box-shadow:
+    inset 3px 3px 7px rgba(148, 163, 184, 0.28),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  color: #0f172a !important;
+}
+
+body.theme-astro-glass header,
+body.theme-astro-glass .app-bottom-nav,
+body.theme-astro-glass .app-sidebar {
+  background: rgba(238, 244, 252, 0.94) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  box-shadow:
+    0 10px 25px rgba(20, 25, 40, 0.09),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.theme-astro-glass .app-sidebar-nav-btn:not(.is-active) {
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow:
+    0 4px 10px rgba(15, 23, 42, 0.05),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.92) !important;
+  color: #0f172a !important;
+}
+body.theme-astro-glass .app-sidebar-nav-btn:not(.is-active):hover {
+  color: #0F7A50 !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+body.theme-astro-glass .app-bottom-nav-btn:not(.is-active) {
+  color: #0f172a !important;
+}
+
+body.theme-astro-glass button.bg-slate-50,
+body.theme-astro-glass button.bg-slate-100,
+body.theme-astro-glass button.bg-white {
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.07),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #0f172a !important;
+}
+
+/* ----------------------------------------------------------------------------
+   THEME 3: CLASSIC PINK 3D ACRYLIC & PLUSH
+   ---------------------------------------------------------------------------- */
+body.theme-pink-acrylic,
+body.theme-pink-acrylic .app-main-canvas {
+  background: linear-gradient(135deg, #ffeef4 0%, #ffdde9 45%, #f5d0fe 100%) !important;
+  color: #1e1b4b;
+}
+body.theme-pink-acrylic .min-h-screen.bg-slate-50,
+body.theme-pink-acrylic .min-h-full.bg-slate-50 {
+  background: transparent !important;
+}
+body.theme-pink-acrylic .app-sidebar,
+body.theme-pink-acrylic .app-bottom-nav {
+  background: rgba(255, 240, 246, 0.95) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  border-color: rgba(251, 207, 232, 0.85) !important;
+}
+body.theme-pink-acrylic .acrylic-frame,
+body.theme-pink-acrylic .rgb-container > .bg-white,
+body.theme-pink-acrylic .rgb-container > .bg-white\/90,
+body.theme-pink-acrylic .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-pink-acrylic .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-pink-acrylic .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-pink-acrylic .bg-white\/90.rounded-\[22px\]:not(.studio-item-card) {
+  background: linear-gradient(145deg, rgba(255, 251, 253, 0.96), rgba(255, 240, 247, 0.92)) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.94) !important;
+  box-shadow:
+    0 10px 24px rgba(236, 72, 153, 0.11),
+    inset 0 2px 4px rgba(255, 255, 255, 0.95) !important;
+}
+body.theme-pink-acrylic .plush-pillow {
+  background: linear-gradient(145deg, #ffffff 0%, #fff5f9 100%) !important;
+  border: 1px solid rgba(251, 207, 232, 0.9) !important;
+}
+body.theme-pink-acrylic .bg-slate-50.rounded-xl:not(.studio-item-card),
+body.theme-pink-acrylic .bg-slate-50.rounded-2xl:not(.studio-item-card) {
+  background-color: #fff0f6 !important;
+  box-shadow: inset 3px 3px 7px rgba(244, 114, 182, 0.12), inset -3px -3px 7px #ffffff !important;
+  border-color: rgba(251, 207, 232, 0.7) !important;
+}
+
+/* ----------------------------------------------------------------------------
+   THEME 4: 3D LIQUID GLASS CHAMPAGNE & GOLD
+   ---------------------------------------------------------------------------- */
+body.theme-liquid-champagne,
+body.theme-liquid-champagne .app-main-canvas {
+  background: radial-gradient(circle at 20% 20%, #fffbeb 0%, #fef3c7 50%, #fde68a 100%) !important;
+  color: #1c1917;
+}
+body.theme-liquid-champagne .min-h-screen.bg-slate-50,
+body.theme-liquid-champagne .min-h-full.bg-slate-50 {
+  background: transparent !important;
+}
+body.theme-liquid-champagne .app-sidebar,
+body.theme-liquid-champagne .app-bottom-nav {
+  background: rgba(255, 251, 235, 0.95) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+}
+body.theme-liquid-champagne .acrylic-frame,
+body.theme-liquid-champagne .rgb-container > .bg-white,
+body.theme-liquid-champagne .rgb-container > .bg-white\/90,
+body.theme-liquid-champagne .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-liquid-champagne .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-liquid-champagne .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-liquid-champagne .bg-white\/90.rounded-\[22px\]:not(.studio-item-card) {
+  background: linear-gradient(145deg, rgba(255, 254, 248, 0.96), rgba(255, 249, 232, 0.92)) !important;
+  border: 1.5px solid rgba(251, 191, 36, 0.45) !important;
+  box-shadow:
+    0 10px 24px rgba(180, 83, 9, 0.1),
+    inset 0 2px 4px rgba(255, 255, 255, 0.95) !important;
+}
+body.theme-liquid-champagne .plush-pillow {
+  background: linear-gradient(145deg, #ffffff 0%, #fffbeb 100%) !important;
+  border: 1px solid rgba(252, 211, 77, 0.5) !important;
+}
+body.theme-liquid-champagne .bg-slate-50.rounded-xl:not(.studio-item-card),
+body.theme-liquid-champagne .bg-slate-50.rounded-2xl:not(.studio-item-card) {
+  background-color: #fef9e7 !important;
+  box-shadow: inset 3px 3px 7px rgba(217, 119, 6, 0.1), inset -3px -3px 7px #ffffff !important;
+}
+
+/* ----------------------------------------------------------------------------
+   THEME 5: 3D PASTEL JELLY DROPLET OS
+   ---------------------------------------------------------------------------- */
+body.theme-pastel-jelly,
+body.theme-pastel-jelly .app-main-canvas {
+  background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%) !important;
+  color: #0f172a;
+}
+body.theme-pastel-jelly .min-h-screen.bg-slate-50,
+body.theme-pastel-jelly .min-h-full.bg-slate-50 {
+  background: transparent !important;
+}
+body.theme-pastel-jelly .app-sidebar,
+body.theme-pastel-jelly .app-bottom-nav {
+  background: rgba(245, 243, 255, 0.95) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+}
+body.theme-pastel-jelly .acrylic-frame,
+body.theme-pastel-jelly .rgb-container > .bg-white,
+body.theme-pastel-jelly .rgb-container > .bg-white\/90,
+body.theme-pastel-jelly .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-pastel-jelly .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-pastel-jelly .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-pastel-jelly .bg-white\/90.rounded-\[22px\]:not(.studio-item-card) {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 246, 255, 0.92)) !important;
+  border: 2px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    0 12px 28px rgba(99, 102, 241, 0.12),
+    inset 0 3px 8px rgba(255, 255, 255, 0.95) !important;
+}
+body.theme-pastel-jelly .plush-pillow {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 247, 255, 0.92) 100%) !important;
+}
+body.theme-pastel-jelly .bg-slate-50.rounded-xl:not(.studio-item-card),
+body.theme-pastel-jelly .bg-slate-50.rounded-2xl:not(.studio-item-card) {
+  background-color: rgba(238, 242, 255, 0.9) !important;
+  box-shadow: inset 3px 3px 7px rgba(99, 102, 241, 0.12), inset -3px -3px 7px #ffffff !important;
+}
+
+/* ----------------------------------------------------------------------------
+   THEME 6: NEO GRAY DARK (Midnight Slate & Tactile Dark Neumorphism)
+   ---------------------------------------------------------------------------- */
+body.theme-neo-gray-dark,
+body.theme-neo-gray-dark .app-main-canvas {
+  background: linear-gradient(145deg, #0b0e17 0%, #111624 55%, #0d111c 100%) !important;
+  color: #f8fafc !important;
+}
+body.theme-neo-gray-dark .app-sidebar,
+body.theme-neo-gray-dark .app-bottom-nav {
+  background: rgba(11, 15, 25, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.theme-neo-gray-dark .acrylic-frame,
+body.theme-neo-gray-dark .rgb-container > .bg-white,
+body.theme-neo-gray-dark .rgb-container > .bg-white\/90,
+body.theme-neo-gray-dark .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-neo-gray-dark .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-neo-gray-dark .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-neo-gray-dark .bg-white\/90.rounded-\[22px\]:not(.studio-item-card) {
+  background: linear-gradient(145deg, #171e2e, #101521) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow:
+    8px 8px 20px #07090f,
+    -6px -6px 16px #1e273b,
+    inset 1px 1px 2px rgba(255, 255, 255, 0.07) !important;
+}
+body.theme-neo-gray-dark .plush-pillow {
+  background: linear-gradient(145deg, #181f30 0%, #121724 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  color: #f8fafc !important;
+}
+
+/* ----------------------------------------------------------------------------
+   THEME 7: NEO BLUE DARK (Deep Space Glass Window & Cyan LED Glow)
+   Directly modeled on .astro-window from the uploaded reference
+   ---------------------------------------------------------------------------- */
+body.theme-neo-blue-dark,
+body.theme-neo-blue-dark .app-main-canvas {
+  background: radial-gradient(circle at 50% 0%, #16203a 0%, #090d18 60%, #05070e 100%) !important;
+  color: #f0f9ff !important;
+}
+body.theme-neo-blue-dark .app-sidebar,
+body.theme-neo-blue-dark .app-bottom-nav {
+  background: rgba(8, 12, 24, 0.95) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+}
+body.theme-neo-blue-dark .acrylic-frame,
+body.theme-neo-blue-dark .rgb-container > .bg-white,
+body.theme-neo-blue-dark .rgb-container > .bg-white\/90,
+body.theme-neo-blue-dark .bg-white.rounded-2xl:not(.studio-item-card),
+body.theme-neo-blue-dark .bg-white.rounded-3xl:not(.studio-item-card),
+body.theme-neo-blue-dark .bg-white.rounded-\[22px\]:not(.studio-item-card),
+body.theme-neo-blue-dark .bg-white\/90.rounded-\[22px\]:not(.studio-item-card) {
+  background: radial-gradient(circle at 75% 25%, #1e2642 0%, #0e1220 55%, #070911 100%) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.85),
+    inset 0 0 24px rgba(56, 189, 248, 0.14),
+    0 14px 32px rgba(0, 0, 0, 0.75) !important;
+}
+body.theme-neo-blue-dark .plush-pillow {
+  background: linear-gradient(160deg, #131c33 0%, #0a101f 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
+  box-shadow:
+    inset 0 0 18px rgba(0, 240, 255, 0.1),
+    0 10px 25px rgba(0, 0, 0, 0.6) !important;
+  color: #f0f9ff !important;
+}
+
+/* ============================================================================
+   5. UNIVERSAL DARK-THEME CONTRAST & TEXT VISIBILITY GUARD
+   Prevents Dark-on-Dark or White-on-White text across all views
+   ============================================================================ */
+body.theme-neo-gray-dark .bg-slate-50,
+body.theme-neo-blue-dark .bg-slate-50 {
+  background-color: #0b111e !important;
+  color: #f8fafc !important;
+}
+
+body.theme-neo-gray-dark .bg-slate-50.rounded-xl,
+body.theme-neo-gray-dark .bg-slate-50.rounded-2xl,
+body.theme-neo-blue-dark .bg-slate-50.rounded-xl,
+body.theme-neo-blue-dark .bg-slate-50.rounded-2xl {
+  background-color: #090d18 !important;
+  box-shadow:
+    inset 4px 4px 9px rgba(0, 0, 0, 0.75),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(56, 189, 248, 0.16) !important;
+}
+
+body.theme-neo-gray-dark .bg-white,
+body.theme-neo-gray-dark .bg-white\/95,
+body.theme-neo-gray-dark .bg-white\/90,
+body.theme-neo-gray-dark .bg-white\/85,
+body.theme-neo-gray-dark .bg-white\/80,
+body.theme-neo-gray-dark .bg-white\/75,
+body.theme-neo-blue-dark .bg-white,
+body.theme-neo-blue-dark .bg-white\/95,
+body.theme-neo-blue-dark .bg-white\/90,
+body.theme-neo-blue-dark .bg-white\/85,
+body.theme-neo-blue-dark .bg-white\/80,
+body.theme-neo-blue-dark .bg-white\/75 {
+  background-color: rgba(15, 21, 35, 0.92) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.theme-neo-gray-dark .bg-slate-100,
+body.theme-neo-gray-dark .bg-slate-100\/80,
+body.theme-neo-blue-dark .bg-slate-100,
+body.theme-neo-blue-dark .bg-slate-100\/80 {
+  background-color: rgba(30, 41, 59, 0.85) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.theme-neo-gray-dark .text-slate-900,
+body.theme-neo-gray-dark .text-slate-800,
+body.theme-neo-blue-dark .text-slate-900,
+body.theme-neo-blue-dark .text-slate-800 {
+  color: #ffffff !important;
+}
+
+body.theme-neo-gray-dark .text-slate-700,
+body.theme-neo-gray-dark .text-slate-600,
+body.theme-neo-blue-dark .text-slate-700,
+body.theme-neo-blue-dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+body.theme-neo-gray-dark .text-slate-500,
+body.theme-neo-blue-dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+body.theme-neo-gray-dark .border-slate-200,
+body.theme-neo-gray-dark .border-slate-200\/80,
+body.theme-neo-gray-dark .border-slate-100,
+body.theme-neo-blue-dark .border-slate-200,
+body.theme-neo-blue-dark .border-slate-200\/80,
+body.theme-neo-blue-dark .border-slate-100 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.theme-neo-gray-dark input:not([type="checkbox"]):not([type="radio"]),
+body.theme-neo-gray-dark select,
+body.theme-neo-gray-dark textarea,
+body.theme-neo-blue-dark input:not([type="checkbox"]):not([type="radio"]),
+body.theme-neo-blue-dark select,
+body.theme-neo-blue-dark textarea {
+  background-color: #090e1a !important;
+  color: #ffffff !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.7) !important;
+}
+
+body.theme-neo-gray-dark input::placeholder,
+body.theme-neo-gray-dark textarea::placeholder,
+body.theme-neo-blue-dark input::placeholder,
+body.theme-neo-blue-dark textarea::placeholder {
+  color: #64748b !important;
+}

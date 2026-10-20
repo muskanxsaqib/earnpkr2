@@ -1,0 +1,8 @@
+{
+  "name": "earingweb",
+  "description": "Join Earning Hub - Powered by Saqib. Earn daily rewards by completing simple tasks. Invite friends and earn extra commission on their package purchases.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
