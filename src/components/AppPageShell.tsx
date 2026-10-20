@@ -39,9 +39,16 @@ export function AppPageShell({
   useEffect(() => {
     let mounted = true;
 
-    // 1. Instant optimistic token resolution right after hydration
+    // 1. Instant optimistic token resolution right after hydration (dynamic project ref)
     try {
-      const token = localStorage.getItem('sb-mmvchbnfhnnhcrtjsmjc-auth-token');
+      let token = null;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          token = localStorage.getItem(k);
+          break;
+        }
+      }
       if (token && mounted) {
         setSession({ user: true });
         setLoading(false);

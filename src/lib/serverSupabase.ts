@@ -1,27 +1,42 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl =
+// Environment variables dynamically read for 100% turnkey deployment
+const supabaseUrl = (
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
   process.env.VITE_SUPABASE_URL ||
-  'https://mmvchbnfhnnhcrtjsmjc.supabase.co';
+  ''
+).trim();
 
-const supabaseAnonKey =
+const supabaseAnonKey = (
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
-  'sb_publishable_z8-PNTbIPrII-mPZWmatrg_aOnL8X91';
+  ''
+).trim();
 
-const supabaseServiceKey =
+const supabaseServiceKey = (
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-  supabaseAnonKey;
+  supabaseAnonKey
+).trim();
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    '⚠️ [ServerSupabase] Supabase environment variables are missing! ' +
+    'Please set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY in .env or .env.local.'
+  );
+}
 
 // Server client for backend database operations
-export const serverAdminSupabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+export const serverAdminSupabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseServiceKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  }
+);
 
 // Helper to extract real client IP address from request headers
 export function getClientIp(request: Request): string {

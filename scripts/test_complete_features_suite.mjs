@@ -1,8 +1,12 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mmvchbnfhnnhcrtjsmjc.supabase.co';
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdmNoYm5maG5uaGNydGpzbWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjM4MzA5NSwiZXhwIjoyMTA3OTU5MDk1fQ.xyz6NBp2KqBgdg4lCQZb7JVVZFMGL1YdUEX30gVQR20';
+dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET || 'earninghub_super_secret_admin_key_2026_saqib_secure_signature_981273981273';
 const BASE_URL = 'http://localhost:3001';
 
