@@ -114,9 +114,9 @@ CREATE TABLE IF NOT EXISTS public.user_plans (
 
 ALTER TABLE public.user_plans ADD COLUMN IF NOT EXISTS approved_at timestamp with time zone;
 ALTER TABLE public.user_plans ADD COLUMN IF NOT EXISTS start_date timestamp with time zone;
-ALTER TABLE public.user_plans ALTER COLUMN sender_account_name SET DEFAULT '';
-ALTER TABLE public.user_plans ALTER COLUMN sender_account_number SET DEFAULT '';
-ALTER TABLE public.user_plans ALTER COLUMN receipt_image_url SET DEFAULT '';
+ALTER TABLE public.user_plans ALTER COLUMN sender_account_name DROP NOT NULL;
+ALTER TABLE public.user_plans ALTER COLUMN sender_account_number DROP NOT NULL;
+ALTER TABLE public.user_plans ALTER COLUMN receipt_image_url DROP NOT NULL;
 ALTER TABLE public.user_plans ALTER COLUMN admin_payment_method_id DROP NOT NULL;
 
 -- (E) DAILY REWARDS TABLE
@@ -168,12 +168,16 @@ CREATE TABLE IF NOT EXISTS public.withdrawals (
   account_name text NOT NULL,
   account_number text NOT NULL,
   status text DEFAULT 'pending' NOT NULL,
+  fee_amount numeric DEFAULT 0,
+  net_receivable numeric DEFAULT 0,
   rejection_reason text,
   processed_at timestamp with time zone,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+ALTER TABLE public.withdrawals ADD COLUMN IF NOT EXISTS fee_amount numeric DEFAULT 0;
+ALTER TABLE public.withdrawals ADD COLUMN IF NOT EXISTS net_receivable numeric DEFAULT 0;
 ALTER TABLE public.withdrawals ADD COLUMN IF NOT EXISTS rejection_reason text;
 ALTER TABLE public.withdrawals ADD COLUMN IF NOT EXISTS processed_at timestamp with time zone;
 ALTER TABLE public.withdrawals ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
@@ -208,6 +212,13 @@ CREATE TABLE IF NOT EXISTS public.weekly_salary_collections (
   UNIQUE(user_id, level)
 );
 
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'weekly_salary_collections_user_id_level_key') THEN
+    ALTER TABLE public.weekly_salary_collections ADD CONSTRAINT weekly_salary_collections_user_id_level_key UNIQUE (user_id, level);
+  END IF;
+END $$;
+
 -- (K) NOTIFICATIONS TABLE
 CREATE TABLE IF NOT EXISTS public.notifications (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -234,10 +245,16 @@ CREATE TABLE IF NOT EXISTS public.admin_messages (
 -- (M) FEEDBACKS TABLE
 CREATE TABLE IF NOT EXISTS public.feedbacks (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  name text,
+  email text,
   message text NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+ALTER TABLE public.feedbacks ALTER COLUMN user_id DROP NOT NULL;
+ALTER TABLE public.feedbacks ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.feedbacks ADD COLUMN IF NOT EXISTS email text;
 
 -- (N) BAN APPEALS TABLE
 CREATE TABLE IF NOT EXISTS public.ban_appeals (
@@ -273,11 +290,37 @@ CREATE TABLE IF NOT EXISTS public.page_views (
   ip_address text,
   country text,
   city text,
+  os text,
+  browser text,
+  path text,
+  ref_code text,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS device_id text;
 ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS device_type text;
+ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS os text;
+ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS browser text;
+ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS path text;
+ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS ref_code text;
+
+-- (R) COUPONS TABLE
+CREATE TABLE IF NOT EXISTS public.coupons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text UNIQUE NOT NULL,
+  discount_type text NOT NULL CHECK (discount_type IN ('percentage', 'fixed')),
+  discount_value numeric NOT NULL,
+  max_discount_amount numeric,
+  min_order_amount numeric DEFAULT 0,
+  max_uses int,
+  used_count int DEFAULT 0,
+  expires_at timestamp with time zone,
+  is_active boolean NOT NULL DEFAULT true,
+  applicable_category text DEFAULT 'all',
+  description text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
 -- ==============================================================================
 -- 3. FINANCIAL CHECK CONSTRAINTS (ZERO-LOSS GUARANTEE)
@@ -417,6 +460,14 @@ ON CONFLICT (id) DO UPDATE SET
   is_active = EXCLUDED.is_active;
 
 SELECT setval(pg_get_serial_sequence('public.payment_methods', 'id'), COALESCE(MAX(id), 1)) FROM public.payment_methods;
+
+-- Seed Default Promotional Coupons
+INSERT INTO public.coupons (code, discount_type, discount_value, min_order_amount, max_discount_amount, max_uses, description)
+VALUES 
+  ('WELCOME10', 'percentage', 10, 200, 300, 500, 'Welcome Special: 10% OFF on all orders over Rs. 200'),
+  ('SAQIB50', 'fixed', 50, 300, NULL, 200, 'VIP Flat Discount: Rs. 50 OFF on orders over Rs. 300'),
+  ('EID20', 'percentage', 20, 500, 500, 1000, 'Festive Special: 20% OFF on orders over Rs. 500')
+ON CONFLICT (code) DO NOTHING;
 
 -- Set up receipts storage bucket
 INSERT INTO storage.buckets (id, name, public) 
@@ -1095,6 +1146,7 @@ ALTER TABLE public.admin_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedbacks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ban_appeals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 
 -- (A) PLANS TABLE
 DROP POLICY IF EXISTS "Public can view active plans" ON public.plans;
@@ -1290,9 +1342,10 @@ ON public.feedbacks FOR SELECT
 TO authenticated USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can submit feedback" ON public.feedbacks;
-CREATE POLICY "Users can submit feedback"
+DROP POLICY IF EXISTS "Allow submit feedback" ON public.feedbacks;
+CREATE POLICY "Allow submit feedback"
 ON public.feedbacks FOR INSERT
-TO authenticated WITH CHECK (auth.uid() = user_id);
+TO anon, authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Service role full feedbacks" ON public.feedbacks;
 CREATE POLICY "Service role full feedbacks"
@@ -1329,6 +1382,17 @@ CREATE POLICY "Service role full page views"
 ON public.page_views FOR ALL
 TO service_role USING (true) WITH CHECK (true);
 
+-- (J) COUPONS POLICIES
+DROP POLICY IF EXISTS "Public can view active coupons" ON public.coupons;
+CREATE POLICY "Public can view active coupons"
+ON public.coupons FOR SELECT
+TO anon, authenticated USING (is_active = true);
+
+DROP POLICY IF EXISTS "Service role full access to coupons" ON public.coupons;
+CREATE POLICY "Service role full access to coupons"
+ON public.coupons FOR ALL
+TO service_role USING (true) WITH CHECK (true);
+
 -- ==============================================================================
 -- 10. MASTER PRIVILEGE GRANTS
 -- ==============================================================================
@@ -1336,11 +1400,12 @@ GRANT SELECT ON public.plans TO anon, authenticated;
 GRANT SELECT ON public.payment_methods TO anon, authenticated;
 GRANT SELECT ON public.app_settings TO anon, authenticated;
 GRANT SELECT ON public.feature_flags TO anon, authenticated;
+GRANT SELECT ON public.coupons TO anon, authenticated;
 GRANT SELECT, UPDATE ON public.profiles TO anon, authenticated;
 
 GRANT SELECT, INSERT ON public.deposits TO authenticated;
 GRANT SELECT, INSERT ON public.withdrawals TO authenticated;
-GRANT SELECT, INSERT ON public.feedbacks TO authenticated;
+GRANT SELECT, INSERT ON public.feedbacks TO anon, authenticated;
 GRANT SELECT, INSERT ON public.ban_appeals TO authenticated;
 GRANT SELECT, INSERT ON public.page_views TO anon, authenticated;
 GRANT SELECT, UPDATE ON public.admin_messages TO authenticated;
