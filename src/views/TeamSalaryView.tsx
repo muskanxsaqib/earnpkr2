@@ -3,8 +3,10 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Trophy, Users, Sparkles, CheckCircle2 } from 'lucide-react';
 import { supabase, broadcastChange } from '../lib/supabase';
 import { TEAM_REWARD_LEVELS, getRewardLevels } from '../lib/rewardLevels';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function TeamSalaryView({ onBack }: { onBack: () => void }) {
+  const { format } = useCurrency();
   const [currentTeam, setCurrentTeam] = useState(0);
   const [claimedLevels, setClaimedLevels] = useState<number[]>([]);
   const [isCollecting, setIsCollecting] = useState(false);
@@ -123,7 +125,7 @@ export function TeamSalaryView({ onBack }: { onBack: () => void }) {
         await broadcastChange('weekly_salary_collections', 'insert', { userId, level: levelIdx, amount });
         
         setClaimedLevels(prev => [...prev, levelIdx]);
-        alert(`Successfully collected Rs. ${amount} for Level ${levelIdx}!`);
+        alert(`Successfully collected ${format(amount)} for Level ${levelIdx}!`);
       }
     } catch (err) {
       console.error(err);
@@ -231,7 +233,7 @@ export function TeamSalaryView({ onBack }: { onBack: () => void }) {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-white/80 uppercase mb-0.5">Reward</p>
-                      <p className="text-[20px] font-black drop-shadow-sm">Rs {(level.req * referralBonus).toLocaleString()}</p>
+                      <p className="text-[20px] font-black drop-shadow-sm">{format(level.req * referralBonus)}</p>
                     </div>
                   </div>
                   

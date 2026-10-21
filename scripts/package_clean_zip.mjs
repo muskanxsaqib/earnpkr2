@@ -39,6 +39,7 @@ const filesToCopy = [
   'run-local.bat',
   'metadata.json',
   'master_schema.sql',
+  'MULTI_CURRENCY_SETUP.sql',
   'ALLOW_CLIENT_DOMAIN.sql',
   'README.md',
   'AGENTS.md',

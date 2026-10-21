@@ -3,8 +3,10 @@ import { Calculator, Users, Calendar, Award, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { INVESTMENT_PLANS as fallbackPlans } from '../data';
 import { parsePlansMetaJson, mergePlanWithMeta } from '../lib/economics';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function ProfitCalculator() {
+  const { format } = useCurrency();
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [referralBonusRate, setReferralBonusRate] = useState(50);
@@ -117,7 +119,7 @@ export function ProfitCalculator() {
             </div>
           </div>
           <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-[#0F7A50] px-2.5 py-1 rounded-lg border border-emerald-100">
-            +{referralBonusRate} PKR / Invite
+            +{format(referralBonusRate)} / Invite
           </span>
         </div>
 
@@ -127,7 +129,7 @@ export function ProfitCalculator() {
             <div className="flex justify-between text-[12px] font-semibold mb-2">
               <span className="text-slate-500">Select Plan</span>
               <span className="text-[#0F7A50] font-bold">
-                {currentPlan?.name || `Plan ${currentPlan?.plan_number}`} — Rs. {planPrice.toLocaleString()}
+                {currentPlan?.name || `Plan ${currentPlan?.plan_number}`} — {format(planPrice)}
               </span>
             </div>
             <input
@@ -140,8 +142,8 @@ export function ProfitCalculator() {
               className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#0F7A50]"
             />
             <div className="flex justify-between text-[10px] text-slate-400 font-medium mt-1">
-              <span>{activeList[0]?.name || 'Plan 1'} (Rs. {Number(activeList[0]?.plan_price || 250).toLocaleString()})</span>
-              <span>{activeList[activeList.length - 1]?.name || 'Max Plan'} (Rs. {Number(activeList[activeList.length - 1]?.plan_price || 5000).toLocaleString()})</span>
+              <span>{activeList[0]?.name || 'Plan 1'} ({format(Number(activeList[0]?.plan_price || 250))})</span>
+              <span>{activeList[activeList.length - 1]?.name || 'Max Plan'} ({format(Number(activeList[activeList.length - 1]?.plan_price || 5000))})</span>
             </div>
           </div>
 
@@ -153,7 +155,7 @@ export function ProfitCalculator() {
                 Invited Active Members (Min {reqMembers} req.)
               </span>
               <span className="text-indigo-600 font-bold tabular-nums">
-                {totalMembers} Members (+Rs. {referralBonus.toLocaleString()})
+                {totalMembers} Members (+{format(referralBonus)})
               </span>
             </div>
             <input
@@ -171,18 +173,18 @@ export function ProfitCalculator() {
           <div className="grid grid-cols-3 gap-2 pt-1">
             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
               <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Daily Return</p>
-              <p className="text-[14px] font-black text-[#0F7A50] tabular-nums">Rs. {dailyReward.toLocaleString()}</p>
+              <p className="text-[14px] font-black text-[#0F7A50] tabular-nums">{format(dailyReward)}</p>
               <p className="text-[9px] text-slate-400">for {totalDays} days</p>
             </div>
             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
               <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">{totalDays}-Day Reward</p>
-              <p className="text-[14px] font-black text-slate-800 tabular-nums">Rs. {cycleReward.toLocaleString()}</p>
+              <p className="text-[14px] font-black text-slate-800 tabular-nums">{format(cycleReward)}</p>
               <p className="text-[9px] text-slate-400">Daily × {totalDays}</p>
             </div>
             <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100 text-center">
               <p className="text-[10px] text-emerald-700 font-semibold uppercase mb-0.5">Total Payout</p>
-              <p className="text-[14px] font-black text-[#0F7A50] tabular-nums">Rs. {totalUserPayout.toLocaleString()}</p>
-              <p className="text-[9px] text-emerald-600 font-medium">incl. Rs. {referralBonus} bonus</p>
+              <p className="text-[14px] font-black text-[#0F7A50] tabular-nums">{format(totalUserPayout)}</p>
+              <p className="text-[9px] text-emerald-600 font-medium">incl. {format(referralBonus)} bonus</p>
             </div>
           </div>
         </div>

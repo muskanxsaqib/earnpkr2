@@ -5,6 +5,8 @@ import { parsePlansMetaJson } from '../lib/economics';
 import { parseDailyTasksConfig, getTaskForDay, TaskVerificationConfig, DEFAULT_VERIFICATION_TASKS } from '../lib/platformFeatures';
 import { motion, AnimatePresence } from 'motion/react';
 import { Gift, Clock, CheckCircle2, AlertCircle, RefreshCw, Lock, Sparkles, Award, HelpCircle } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
+import { CurrencySwitcherTrigger } from '../components/CurrencySwitcherModal';
 import dynamic from 'next/dynamic';
 
 const TaskVerificationModal = dynamic(
@@ -68,6 +70,7 @@ function LockedRewardCountdown({ availableAt, onUnlock }: { availableAt: string;
 }
 
 export function MyPlansView() {
+  const { format } = useCurrency();
   const [plans, setPlans] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -547,7 +550,7 @@ export function MyPlansView() {
               
               <div className="my-5 py-3 px-4 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-inner">
                 <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-wider">Added to Wallet</p>
-                <p className="text-2xl font-black text-emerald-700">Rs. {successClaimData.amount}</p>
+                <p className="text-2xl font-black text-emerald-700">{format(successClaimData.amount)}</p>
               </div>
 
               <p className="text-emerald-600 text-xs font-semibold bg-emerald-50 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mb-5 border border-emerald-200">
@@ -581,11 +584,12 @@ export function MyPlansView() {
         }}
       />
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-800 tracking-tight">My Active Earnings</h2>
           <p className="text-xs text-slate-500 mt-0.5">Collect your rewards every 24 hours</p>
         </div>
+        <CurrencySwitcherTrigger />
       </div>
       
       <div className="space-y-6">
@@ -612,7 +616,7 @@ export function MyPlansView() {
                   <h3 className="font-bold text-lg mt-1">{plan.plan?.name || `Plan ${plan.plan?.plan_number}`}</h3>
                   <div className="flex gap-4 mt-2 text-xs text-white/80">
                     <div>
-                      Daily Reward: <span className="font-bold text-white">Rs. {plan.plan?.daily_reward}</span>
+                      Daily Reward: <span className="font-bold text-white">{format(plan.plan?.daily_reward)}</span>
                     </div>
                     <div className="w-px h-3 bg-white/30 my-auto"></div>
                     <div>

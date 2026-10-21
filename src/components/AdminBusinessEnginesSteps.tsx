@@ -15,7 +15,18 @@ import {
   Sparkles,
   Gift,
   Calculator,
+  Coins,
+  RotateCcw,
+  DollarSign,
+  CheckCircle,
 } from 'lucide-react';
+import {
+  SUPPORTED_CURRENCIES,
+  DEFAULT_EXCHANGE_RATES,
+  parseExchangeRatesJson,
+  formatCurrency,
+  CurrencyCode,
+} from '../lib/currency';
 import {
   PromoCodeItem,
   PromoClaimRecord,
@@ -984,6 +995,323 @@ export function AdminDailyTasksStep({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==============================================================================
+// 🌐 STEP 10: Multi-Currency & Exchange Rates Engine
+// ==============================================================================
+
+export function AdminCurrencySettingsStep({
+  appSettings,
+  setAppSettings,
+  onQuickSaveSettings,
+}: AdminBusinessStepsProps) {
+  const [quickSaving, setQuickSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const currentRates = parseExchangeRatesJson(appSettings.currency_rates_json);
+  const defaultCurrency: CurrencyCode = (appSettings.default_platform_currency as CurrencyCode) || 'PKR';
+  const allowUserSwitch = appSettings.allow_user_currency_switch !== 'false';
+
+  const updateRates = (newRates: Record<string, number>) => {
+    const jsonStr = JSON.stringify(newRates);
+    setAppSettings((prev: any) => ({
+      ...prev,
+      currency_rates_json: jsonStr,
+    }));
+  };
+
+  const handleRateChange = (code: 'USD' | 'INR' | 'USDT', valStr: string) => {
+    const val = parseFloat(valStr);
+    const updated = {
+      ...currentRates,
+      [code]: isNaN(val) || val <= 0 ? DEFAULT_EXCHANGE_RATES[code] : val,
+    };
+    updateRates(updated);
+  };
+
+  const handleResetDefaults = () => {
+    if (confirm('Kya aap exchange rates ko market default (1 USD = 280 PKR, 1 INR = 3.35 PKR, 1 USDT = 280 PKR) par reset karna chahte hain?')) {
+      updateRates(DEFAULT_EXCHANGE_RATES);
+    }
+  };
+
+  const handleQuickSave = async () => {
+    if (!onQuickSaveSettings) return;
+    setQuickSaving(true);
+    try {
+      await onQuickSaveSettings({
+        currency_rates_json: JSON.stringify(currentRates),
+        default_platform_currency: defaultCurrency,
+        allow_user_currency_switch: allowUserSwitch ? 'true' : 'false',
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (e: any) {
+      alert('Failed to save currency settings: ' + (e?.message || e));
+    } finally {
+      setQuickSaving(false);
+    }
+  };
+
+  const previewAmounts = [250, 500, 1000, 5000];
+
+  return (
+    <div className="space-y-6">
+      {/* Step Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/20 shrink-0">
+            <Globe className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                Step 10 of 10
+              </span>
+              <h3 className="font-black text-base sm:text-lg text-slate-900">
+                Multi-Currency &amp; Exchange Rates Engine
+              </h3>
+            </div>
+            <p className="text-xs text-slate-600 font-medium mt-0.5">
+              Base financial accounting database mein hamesha 100% strict PKR par mehfooz rehti hai. Yahan USD, INR aur USDT ke live conversion rates set karein.
+            </p>
+          </div>
+        </div>
+
+        {onQuickSaveSettings && (
+          <button
+            type="button"
+            disabled={quickSaving}
+            onClick={handleQuickSave}
+            className="self-start sm:self-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            {saveSuccess ? (
+              <>
+                <CheckCircle className="w-4 h-4 text-emerald-200" />
+                <span>Saved &amp; Synced!</span>
+              </>
+            ) : quickSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Quick Save Live</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Grid of Settings */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Card 1: Default Platform Currency */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 text-slate-800">
+            <Coins className="w-5 h-5 text-emerald-600" />
+            <h4 className="font-bold text-sm">Default Platform Currency</h4>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Jo naye visitors website kholen ge un ko default tor par yeh currency nazar aaye gi jab tak woh khud tabdeel na karein.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            {(['PKR', 'USD', 'INR', 'USDT'] as CurrencyCode[]).map((code) => {
+              const meta = SUPPORTED_CURRENCIES[code];
+              const isSelected = defaultCurrency === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() =>
+                    setAppSettings((prev: any) => ({
+                      ...prev,
+                      default_platform_currency: code,
+                    }))
+                  }
+                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                    isSelected
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-2 ring-emerald-500/20'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-700 font-bold'
+                  }`}
+                >
+                  <span className="text-2xl">{meta.flag}</span>
+                  <span className="text-xs">{meta.code}</span>
+                  <span className="text-[10px] opacity-75 font-mono">{meta.symbol}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Card 2: User Switcher Permission */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-slate-800">
+              <Globe className="w-5 h-5 text-indigo-600" />
+              <h4 className="font-bold text-sm">Allow Users to Switch Currency</h4>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setAppSettings((prev: any) => ({
+                  ...prev,
+                  allow_user_currency_switch: allowUserSwitch ? 'false' : 'true',
+                }))
+              }
+              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+                allowUserSwitch ? 'bg-emerald-600' : 'bg-slate-300'
+              }`}
+            >
+              <div
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${
+                  allowUserSwitch ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Agar enabled ho to users header bar, sidebar, profile aur plans view se foran apni marzi ki currency (PKR, USD, INR, USDT) select kar sakte hain.
+          </p>
+
+          <div
+            className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+              allowUserSwitch
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                : 'bg-amber-50 text-amber-800 border border-amber-200'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${allowUserSwitch ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+            <span>
+              {allowUserSwitch
+                ? 'User Currency Switcher is ACTIVE on website'
+                : 'User Switcher is HIDDEN (All users will see default currency)'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 3: Exchange Rates Configuration */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h4 className="font-black text-sm sm:text-base text-slate-900 flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-emerald-600" />
+              <span>Conversion Rates Configuration (PKR Parity)</span>
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Specify how many Pakistani Rupees (PKR) equal 1 unit of foreign currency. Formula: Foreign Amount = PKR Amount / Rate.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleResetDefaults}
+            className="self-start sm:self-center px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Market Defaults</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* USD Rate */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🇺🇸</span>
+                <span className="font-extrabold text-sm text-slate-800">1 US Dollar (USD)</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-500">$</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="0.01"
+                min="1"
+                value={currentRates.USD}
+                onChange={(e) => handleRateChange('USD', e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+              <span className="text-xs font-bold text-slate-500 shrink-0">PKR</span>
+            </div>
+            <p className="text-[10px] text-slate-400">Default: 280 PKR</p>
+          </div>
+
+          {/* INR Rate */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🇮🇳</span>
+                <span className="font-extrabold text-sm text-slate-800">1 Indian Rupee (INR)</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-500">₹</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="0.01"
+                min="0.1"
+                value={currentRates.INR}
+                onChange={(e) => handleRateChange('INR', e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+              <span className="text-xs font-bold text-slate-500 shrink-0">PKR</span>
+            </div>
+            <p className="text-[10px] text-slate-400">Default: 3.35 PKR</p>
+          </div>
+
+          {/* USDT Rate */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🌐</span>
+                <span className="font-extrabold text-sm text-slate-800">1 Tether USD (USDT)</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-500">₮</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="0.01"
+                min="1"
+                value={currentRates.USDT}
+                onChange={(e) => handleRateChange('USDT', e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+              <span className="text-xs font-bold text-slate-500 shrink-0">PKR</span>
+            </div>
+            <p className="text-[10px] text-slate-400">Default: 280 PKR</p>
+          </div>
+        </div>
+
+        {/* Live Calculation Preview */}
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+          <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+            Live Preview (How Platform Prices Look in Other Currencies)
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {previewAmounts.map((pkrAmt) => (
+              <div key={pkrAmt} className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs space-y-1">
+                <p className="text-[11px] font-black text-slate-900 font-mono">
+                  Rs. {pkrAmt.toLocaleString()}
+                </p>
+                <div className="text-[10px] space-y-0.5 text-slate-600 font-mono">
+                  <p>🇺🇸 {formatCurrency(pkrAmt, 'USD', currentRates)}</p>
+                  <p>🇮🇳 {formatCurrency(pkrAmt, 'INR', currentRates)}</p>
+                  <p>🌐 {formatCurrency(pkrAmt, 'USDT', currentRates)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

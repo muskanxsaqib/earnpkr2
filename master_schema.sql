@@ -390,7 +390,10 @@ INSERT INTO public.app_settings (setting_key, setting_value) VALUES
 ('withdraw_close_hour', '21'),
 ('promo_feature_enabled', 'false'),
 ('promo_codes_json', '[]'),
-('promo_claims_json', '[]')
+('promo_claims_json', '[]'),
+('default_platform_currency', 'PKR'),
+('allow_user_currency_switch', 'true'),
+('currency_rates_json', '{"USD":280,"INR":3.35,"USDT":280}')
 ON CONFLICT (setting_key) DO NOTHING;
 
 -- Seed Default Feature Flags

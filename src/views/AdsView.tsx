@@ -11,8 +11,10 @@ import {
   DailyVerificationTask,
 } from '../lib/platformFeatures';
 import { TaskVerificationModal } from '../components/TaskVerificationModal';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function AdsView({ onNavigateToPackages }: { onNavigateToPackages: () => void }) {
+  const { format } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [activePlans, setActivePlans] = useState<any[]>([]);
@@ -192,7 +194,7 @@ export function AdsView({ onNavigateToPackages }: { onNavigateToPackages: () => 
       }
 
       await broadcastChange('daily_rewards', 'collect', { rewardId: reward.id, userId });
-      setSuccessMsg(`Day ${reward.day_number} Task Verified! Rs. ${reward.reward_amount} aap ke wallet mein jama ho gaye.`);
+      setSuccessMsg(`Day ${reward.day_number} Task Verified! ${format(reward.reward_amount)} aap ke wallet mein jama ho gaye.`);
       setPendingTaskClaim(null);
       fetchDailyTasksData();
     } catch (err: any) {
@@ -337,7 +339,7 @@ export function AdsView({ onNavigateToPackages }: { onNavigateToPackages: () => 
                             : `${item.planName} — Day ${item.reward.day_number} Daily Reward`}
                         </h4>
                         <p className="text-xs font-mono font-extrabold text-[#0F7A50] tabular-nums">
-                          Reward: Rs. {item.reward.reward_amount}
+                          Reward: {format(item.reward.reward_amount)}
                         </p>
                       </div>
                     </div>
@@ -356,12 +358,12 @@ export function AdsView({ onNavigateToPackages }: { onNavigateToPackages: () => 
                       {taskConfig.require_task_before_claim ? (
                         <>
                           <ShieldCheck size={15} />
-                          <span>Verify Task &amp; Claim Rs. {item.reward.reward_amount}</span>
+                          <span>Verify Task &amp; Claim {format(item.reward.reward_amount)}</span>
                         </>
                       ) : (
                         <>
                           <CheckCircle2 size={15} />
-                          <span>Collect Rs. {item.reward.reward_amount}</span>
+                          <span>Collect {format(item.reward.reward_amount)}</span>
                         </>
                       )}
                     </button>

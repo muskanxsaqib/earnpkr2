@@ -5,6 +5,8 @@ import { supabase, broadcastChange } from '../lib/supabase';
 import { useSiteBranding, BRAND_ICON_PRESETS, renderBrandPresetIcon } from '../lib/branding';
 import { ThemeStudioTriggerButton } from '../components/ThemeFontStudioModal';
 import { useTactileTheme } from '../context/TactileThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { CurrencySwitcherTrigger } from '../components/CurrencySwitcherModal';
 import { fetchUserPromoBonusFromSettings } from '../lib/platformFeatures';
 import dynamic from 'next/dynamic';
 
@@ -14,6 +16,7 @@ const PromoRedeemModal = dynamic(() => import('../components/PromoRedeemModal').
 export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' | 'ads' | 'packages' | 'invite' | 'profile' | 'my-plans', subView?: string) => void }) {
   const branding = useSiteBranding();
   const { rgbLightEnabled: rgbEnabled, toggleRgbLight: toggleRgb } = useTactileTheme();
+  const { format } = useCurrency();
   const activePreset = BRAND_ICON_PRESETS.find((p) => p.key === branding.site_icon_preset) || BRAND_ICON_PRESETS[0];
   const [showTeamSalary, setShowTeamSalary] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -459,6 +462,7 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <CurrencySwitcherTrigger />
           <ThemeStudioTriggerButton />
           <button
             type="button"
@@ -574,7 +578,7 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
                 </div>
               </div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-5">
-                PKR {balance.toLocaleString()}
+                {format(balance)}
               </h1>
               
               <motion.button 
@@ -645,7 +649,7 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
                     </div>
                   </div>
                 </div>
-                <p className="text-xl font-bold text-slate-800">PKR {totalEarnings.toLocaleString()}</p>
+                <p className="text-xl font-bold text-slate-800">{format(totalEarnings)}</p>
               </div>
             </motion.div>
 
@@ -661,7 +665,7 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
                   <Calendar size={16} strokeWidth={2} />
                   <span className="text-xs font-medium">Today Task Earning</span>
                 </div>
-                <p className="text-xl font-bold text-slate-800">PKR {todayEarnings.toLocaleString()}</p>
+                <p className="text-xl font-bold text-slate-800">{format(todayEarnings)}</p>
               </div>
             </motion.div>
 
@@ -677,7 +681,7 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
                   <Users size={16} strokeWidth={2} />
                   <span className="text-xs font-medium">Referral</span>
                 </div>
-                <p className="text-xl font-bold text-slate-800">PKR {referralEarnings.toLocaleString()}</p>
+                <p className="text-xl font-bold text-slate-800">{format(referralEarnings)}</p>
               </div>
             </motion.div>
 
@@ -697,7 +701,7 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
                   {appSettings.promo_feature_enabled === 'true' ? (
                     promoEarnings > 0 && (
                       <span className="text-[10px] font-mono font-bold text-emerald-600 tabular-nums">
-                        +Rs {promoEarnings}
+                        +{format(promoEarnings)}
                       </span>
                     )
                   ) : (

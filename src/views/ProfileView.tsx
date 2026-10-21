@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Download, ArrowUpRight, Wallet, KeyRound, Mail, LogOut, ChevronRight, ArrowLeft, Inbox, User, Share2, Copy, CheckCircle2, Clock, MessageSquare, Palette, Ticket } from 'lucide-react';
+import { Download, ArrowUpRight, Wallet, KeyRound, Mail, LogOut, ChevronRight, ArrowLeft, Inbox, User, Share2, Copy, CheckCircle2, Clock, MessageSquare, Palette, Ticket, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase, broadcastChange } from '../lib/supabase';
 import { secureApiCall } from '../lib/api';
 const AdminView = React.lazy(() => import('./AdminView').then(m => ({ default: m.AdminView })));
 import { AdminSecurityGate } from '../components/AdminSecurityGate';
 import { ThemeStudioTriggerButton, ThemeFontStudioModal } from '../components/ThemeFontStudioModal';
+import { CurrencySwitcherTrigger, CurrencySwitcherModal } from '../components/CurrencySwitcherModal';
+import { useCurrency } from '../context/CurrencyContext';
 import { PromoRedeemModal } from '../components/PromoRedeemModal';
 import {
   fetchUserPromoBonusFromSettings,
@@ -24,10 +26,12 @@ export function ProfileView({ onLogout, initialSubView = 'main' }: { onLogout?: 
   const [currentView, setCurrentView] = useState<SubView>(initialSubView);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showThemeStudio, setShowThemeStudio] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoFeatureEnabled, setPromoFeatureEnabled] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState(false);
   const { theme, font, soundEnabled, allowUserThemeSwitcher } = useTactileTheme();
+  const { format, currency, activeCurrencyMeta, allowUserSwitch } = useCurrency();
   const activeThemeItem = APP_THEMES_CATALOG.find((t) => t.id === theme) || APP_THEMES_CATALOG[0];
   const activeFontItem = APP_FONT_PACKS.find((f) => f.id === font) || APP_FONT_PACKS[0];
   const [profile, setProfile] = useState<any>(null);
@@ -251,6 +255,7 @@ export function ProfileView({ onLogout, initialSubView = 'main' }: { onLogout?: 
       <div className="pt-1 mb-2 flex justify-between items-center gap-2">
         <h2 className="text-xl font-bold text-slate-800 tracking-tight">Profile</h2>
         <div className="flex items-center gap-2">
+          <CurrencySwitcherTrigger />
           <ThemeStudioTriggerButton />
           <div className="flex items-center gap-1.5 bg-emerald-50 text-[#0F7A50] border border-emerald-100 px-2.5 py-1 rounded-full text-[11px] font-semibold">
             <span className="relative flex h-2 w-2">
@@ -347,6 +352,43 @@ export function ProfileView({ onLogout, initialSubView = 'main' }: { onLogout?: 
           </button>
         </motion.div>
       )}
+
+      {/* Multi-Currency Display Card */}
+      {allowUserSwitch && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.185 }}
+          className="rgb-container shadow-sm cursor-pointer"
+        >
+          <button
+            type="button"
+            onClick={() => setShowCurrencyModal(true)}
+            className="w-full bg-white rounded-[22px] p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0">
+                <Globe size={20} className="text-emerald-600" />
+              </div>
+              <div className="min-w-0">
+                <span className="font-semibold text-slate-800 text-[15px] block truncate">
+                  Display Currency (PKR, USD, INR, USDT)
+                </span>
+                <span className="text-[11px] font-medium text-slate-500 block truncate">
+                  {activeCurrencyMeta.flag} {activeCurrencyMeta.code} ({activeCurrencyMeta.symbol}) · {activeCurrencyMeta.name}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                {activeCurrencyMeta.code}
+              </span>
+              <ChevronRight size={18} className="text-slate-400" />
+            </div>
+          </button>
+        </motion.div>
+      )}
+      <CurrencySwitcherModal isOpen={showCurrencyModal} onClose={() => setShowCurrencyModal(false)} />
 
       {/* Theme, Fonts & Tactile Sound Studio Card */}
       {allowUserThemeSwitcher && (
@@ -512,6 +554,7 @@ export function ProfileView({ onLogout, initialSubView = 'main' }: { onLogout?: 
 }
 
 function WithdrawView({ onBack, profile }: { onBack: () => void, profile: any }) {
+  const { format, currency } = useCurrency();
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('EasyPaisa');
   const [accountNumber, setAccountNumber] = useState('');
@@ -828,7 +871,14 @@ function WithdrawView({ onBack, profile }: { onBack: () => void, profile: any })
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[13px] font-medium text-slate-800 mb-1.5">Amount (PKR)</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-[13px] font-medium text-slate-800">Amount (PKR)</label>
+            {amount && currency !== 'PKR' && Number(amount) > 0 && (
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                ≈ {format(Number(amount))}
+              </span>
+            )}
+          </div>
           <input 
             type="number" 
             required
@@ -948,6 +998,7 @@ function WithdrawView({ onBack, profile }: { onBack: () => void, profile: any })
 }
 
 function HistoryView({ title, type, emptyText, onBack }: { title: string, type: 'withdrawal_history' | 'deposit_history' | 'balance_history', emptyText: string, onBack: () => void }) {
+  const { format } = useCurrency();
   const [withdrawalItems, setWithdrawalItems] = useState<any[]>([]);
   const [depositItems, setDepositItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1037,7 +1088,7 @@ function HistoryView({ title, type, emptyText, onBack }: { title: string, type: 
           {type === 'withdrawal_history' && (
             <div className="bg-[#0F7A50] rounded-2xl p-4 text-white shadow-sm mb-4">
               <p className="text-[11px] font-medium text-white/90 mb-1">Total Withdrawal</p>
-              <p className="text-2xl font-bold mb-1">PKR {totalApprovedWithdrawal.toFixed(2)}</p>
+              <p className="text-2xl font-bold mb-1">{format(totalApprovedWithdrawal)}</p>
               <p className="text-[10px] text-white/80">Sum of approved withdrawals</p>
             </div>
           )}
@@ -1047,7 +1098,7 @@ function HistoryView({ title, type, emptyText, onBack }: { title: string, type: 
               {withdrawalItems.map(item => (
                 <div key={item.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex justify-between items-start mb-1">
-                    <p className="font-bold text-[15px] text-slate-900">PKR {Number(item.amount).toFixed(2)}</p>
+                    <p className="font-bold text-[15px] text-slate-900">{format(Number(item.amount))}</p>
                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                       item.status === 'approved' 
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
@@ -1075,7 +1126,7 @@ function HistoryView({ title, type, emptyText, onBack }: { title: string, type: 
               {depositItems.map(item => (
                 <div key={item.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex justify-between items-start mb-1">
-                    <p className="font-bold text-[15px] text-slate-900">PKR {Number(item.plans?.plan_price || 0).toFixed(2)}</p>
+                    <p className="font-bold text-[15px] text-slate-900">{format(Number(item.plans?.plan_price || 0))}</p>
                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                       item.status === 'approved' 
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 

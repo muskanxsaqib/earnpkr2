@@ -32,6 +32,7 @@ import {
   AdminWithdrawalRulesSection,
   AdminPromoCodesStep,
   AdminDailyTasksStep,
+  AdminCurrencySettingsStep,
 } from '../components/AdminBusinessEnginesSteps';
 import {
   getUserPromoBonusTotal,
@@ -39,7 +40,7 @@ import {
 } from '../lib/platformFeatures';
 import { uploadToImageKit } from '../lib/imagekit';
 
-export type AdminSettingsStep = 'menu' | 'branding' | 'theme' | 'landing' | 'channels' | 'economics' | 'salary' | 'security' | 'promo' | 'tasks' | 'all';
+export type AdminSettingsStep = 'menu' | 'branding' | 'theme' | 'landing' | 'channels' | 'economics' | 'salary' | 'security' | 'promo' | 'tasks' | 'currency' | 'all';
 
 export function AdminView() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'plans' | 'payments' | 'deposits' | 'withdrawals' | 'settings' | 'analytics' | 'feedbacks' | 'messages'>('overview');
@@ -718,6 +719,9 @@ export function AdminView() {
         localStorage.setItem('app_admin_default_theme', syncedSettings.default_theme_mode || 'astro-neu');
         localStorage.setItem('app_admin_default_font', syncedSettings.default_font_mode || 'tech-modern');
         localStorage.setItem('app_allow_user_switcher', syncedSettings.allow_user_theme_switcher !== 'false' ? 'true' : 'false');
+        if (syncedSettings.default_platform_currency) {
+          localStorage.setItem('app_default_platform_currency', syncedSettings.default_platform_currency);
+        }
         window.dispatchEvent(new Event('site-theme-defaults-updated'));
       } catch {}
 
@@ -1735,15 +1739,16 @@ export function AdminView() {
 
   const SETTINGS_STEP_META: Record<AdminSettingsStep, { title: string; subtitle: string; stepNum?: string }> = {
     menu: { title: 'App Settings (Step-by-Step)', subtitle: 'Select any setting category below just like WhatsApp / TikTok Settings' },
-    branding: { stepNum: 'Step 1 of 9', title: 'Website Identity, Logo & SEO', subtitle: 'Change app name, tagline, SEO description, custom logo or icon preset' },
-    theme: { stepNum: 'Step 2 of 9', title: 'Global Theme, Font & Audio Studio', subtitle: 'Set default visual theme, Google font pack, RGB glow & user switcher' },
-    landing: { stepNum: 'Step 3 of 9', title: 'Pre-Login Landing Page Studio', subtitle: 'Toggle landing page ON/OFF, customize 8 sections, hero image & 3 steps' },
-    channels: { stepNum: 'Step 4 of 9', title: 'WhatsApp, Telegram & Marquee', subtitle: 'Configure welcome running notice and social community follow cards' },
-    economics: { stepNum: 'Step 5 of 9', title: 'Withdrawals, Fees, Schedule & Referral Rules', subtitle: 'Set withdrawal fee %, limits, open hours, referral bonus & free days' },
-    salary: { stepNum: 'Step 6 of 9', title: 'Team Salary Milestones (Levels 1–6)', subtitle: 'Customize active team member goals and weekly PKR salary rewards' },
-    security: { stepNum: 'Step 7 of 9', title: 'Security & Device Protection', subtitle: '1-Device-1-Account restriction and Superadmin Double-Lock password' },
-    promo: { stepNum: 'Step 8 of 9', title: 'Promo & Gift Codes Voucher Engine', subtitle: 'Create custom redeem codes, set PKR bonus, max claims & WhatsApp share post' },
-    tasks: { stepNum: 'Step 9 of 9', title: 'Daily Tasks & Link Timer Verification', subtitle: 'Add YouTube/Website/Social links & countdown timers required before daily claim' },
+    branding: { stepNum: 'Step 1 of 10', title: 'Website Identity, Logo & SEO', subtitle: 'Change app name, tagline, SEO description, custom logo or icon preset' },
+    theme: { stepNum: 'Step 2 of 10', title: 'Global Theme, Font & Audio Studio', subtitle: 'Set default visual theme, Google font pack, RGB glow & user switcher' },
+    landing: { stepNum: 'Step 3 of 10', title: 'Pre-Login Landing Page Studio', subtitle: 'Toggle landing page ON/OFF, customize 8 sections, hero image & 3 steps' },
+    channels: { stepNum: 'Step 4 of 10', title: 'WhatsApp, Telegram & Marquee', subtitle: 'Configure welcome running notice and social community follow cards' },
+    economics: { stepNum: 'Step 5 of 10', title: 'Withdrawals, Fees, Schedule & Referral Rules', subtitle: 'Set withdrawal fee %, limits, open hours, referral bonus & free days' },
+    salary: { stepNum: 'Step 6 of 10', title: 'Team Salary Milestones (Levels 1–6)', subtitle: 'Customize active team member goals and weekly PKR salary rewards' },
+    security: { stepNum: 'Step 7 of 10', title: 'Security & Device Protection', subtitle: '1-Device-1-Account restriction and Superadmin Double-Lock password' },
+    promo: { stepNum: 'Step 8 of 10', title: 'Promo & Gift Codes Voucher Engine', subtitle: 'Create custom redeem codes, set PKR bonus, max claims & WhatsApp share post' },
+    tasks: { stepNum: 'Step 9 of 10', title: 'Daily Tasks & Link Timer Verification', subtitle: 'Add YouTube/Website/Social links & countdown timers required before daily claim' },
+    currency: { stepNum: 'Step 10 of 10', title: 'Multi-Currency & Exchange Rates Engine', subtitle: 'USD, INR & USDT conversion rates, platform default & user switcher permissions' },
     all: { title: 'All App Settings (Full View)', subtitle: 'Complete platform configuration on a single page' },
   };
 
@@ -1894,6 +1899,17 @@ export function AdminView() {
           badge: appSettings.require_task_before_claim !== 'false' ? 'Timer ON' : '1-Click',
           badgeColor: appSettings.require_task_before_claim !== 'false' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700',
           onClick: () => openAdminTabStep('settings', 'tasks'),
+        },
+        {
+          id: 'set-currency',
+          title: 'Step 10: Multi-Currency & Exchange Rates Engine',
+          subtitle: 'USD, INR & USDT live conversion rates, platform default & user switcher',
+          keywords: 'currency exchange rates usd inr usdt dollar rupees conversion forex',
+          icon: Globe,
+          iconBg: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/25',
+          badge: `${appSettings.default_platform_currency || 'PKR'} Default`,
+          badgeColor: 'bg-emerald-50 text-emerald-700',
+          onClick: () => openAdminTabStep('settings', 'currency'),
         },
       ],
     },
@@ -5272,6 +5288,15 @@ GROUP BY p.username;`
                         icon: ShieldCheck,
                         color: 'bg-indigo-500/15 text-indigo-600 border-indigo-500/25',
                       },
+                      {
+                        step: 'currency' as AdminSettingsStep,
+                        num: 'Step 10',
+                        title: 'Multi-Currency & Exchange Rates Engine',
+                        desc: 'USD, INR & USDT Live Conversion Rates, Default Platform Currency & User Switcher',
+                        status: `${appSettings.default_platform_currency || 'PKR'} Default`,
+                        icon: Globe,
+                        color: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/25',
+                      },
                     ].map((st) => {
                       const StIcon = st.icon;
                       return (
@@ -5330,6 +5355,9 @@ GROUP BY p.username;`
                         { id: 'economics', label: '5. Referral & Free Days' },
                         { id: 'salary', label: '6. Team Salary' },
                         { id: 'security', label: '7. Security' },
+                        { id: 'promo', label: '8. Promo Codes' },
+                        { id: 'tasks', label: '9. Daily Tasks' },
+                        { id: 'currency', label: '10. Multi-Currency' },
                       ].map((pill) => (
                         <button
                           key={pill.id}
@@ -6712,6 +6740,15 @@ GROUP BY p.username;`
                       {/* STEP 9: Daily Tasks & Link Timer Verification Setup */}
                       {(settingsStep === 'tasks' || settingsStep === 'all') && (
                         <AdminDailyTasksStep
+                          appSettings={appSettings}
+                          setAppSettings={setAppSettings}
+                          onQuickSaveSettings={handleQuickSaveSettings}
+                        />
+                      )}
+
+                      {/* STEP 10: Multi-Currency & Exchange Rates Engine */}
+                      {(settingsStep === 'currency' || settingsStep === 'all') && (
+                        <AdminCurrencySettingsStep
                           appSettings={appSettings}
                           setAppSettings={setAppSettings}
                           onQuickSaveSettings={handleQuickSaveSettings}

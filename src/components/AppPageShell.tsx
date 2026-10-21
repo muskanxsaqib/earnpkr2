@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout } from './Layout';
 import { TactileThemeProvider } from '../context/TactileThemeContext';
+import { CurrencyProvider } from '../context/CurrencyContext';
 import { supabase } from '../lib/supabase';
 import { TabType } from '../types';
 import dynamic from 'next/dynamic';
@@ -105,25 +106,27 @@ export function AppPageShell({
 
   return (
     <TactileThemeProvider defaultTheme="astro-neu" defaultFont="tech-modern">
-      <BroadcastModal />
-      <PWAInstallButton />
-      <Layout activeTab={activeTab} onTabChange={handleTabChange}>
-        {loading ? (
-          <div className="min-h-[60vh] flex flex-col items-center justify-center p-6">
-            <div className="w-10 h-10 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-            <p className="text-xs font-extrabold text-slate-600 uppercase tracking-widest">Ultra-Fast Loading...</p>
-          </div>
-        ) : requireAuth && !session ? (
-          <div className="py-6 px-4 max-w-md mx-auto">
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-2xl p-4 mb-4 text-center text-sm font-bold shadow-xs">
-              👋 Welcome! Please log in to view this section.
+      <CurrencyProvider>
+        <BroadcastModal />
+        <PWAInstallButton />
+        <Layout activeTab={activeTab} onTabChange={handleTabChange}>
+          {loading ? (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-6">
+              <div className="w-10 h-10 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+              <p className="text-xs font-extrabold text-slate-600 uppercase tracking-widest">Ultra-Fast Loading...</p>
             </div>
-            <AuthView onLogin={() => setSession({ user: true })} />
-          </div>
-        ) : (
-          children
-        )}
-      </Layout>
+          ) : requireAuth && !session ? (
+            <div className="py-6 px-4 max-w-md mx-auto">
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-2xl p-4 mb-4 text-center text-sm font-bold shadow-xs">
+                👋 Welcome! Please log in to view this section.
+              </div>
+              <AuthView onLogin={() => setSession({ user: true })} />
+            </div>
+          ) : (
+            children
+          )}
+        </Layout>
+      </CurrencyProvider>
     </TactileThemeProvider>
   );
 }

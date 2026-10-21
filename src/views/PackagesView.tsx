@@ -7,6 +7,8 @@ import { uploadToImageKit } from '../lib/imagekit';
 import { CheckCircle2, Zap, Flame, Rocket, Diamond, Crown, Briefcase, ArrowLeft, Copy, Upload, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import CryptoJS from 'crypto-js';
+import { useCurrency } from '../context/CurrencyContext';
+import { CurrencySwitcherTrigger } from '../components/CurrencySwitcherModal';
 
 const IconMap: Record<string, any> = {
   flame: Flame,
@@ -24,6 +26,7 @@ const PAYMENT_METHODS = [
 ];
 
 export function PackagesView() {
+  const { format } = useCurrency();
   const [plans, setPlans] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -613,7 +616,7 @@ export function PackagesView() {
 
             <div className="flex justify-between items-center text-[13px]">
               <span className="text-slate-500">Amount:</span>
-              <span className="font-bold text-[#0F7A50]">PKR {submittedData.amount}</span>
+              <span className="font-bold text-[#0F7A50]">{format(submittedData.amount)}</span>
             </div>
 
             <div className="flex justify-between items-center text-[13px]">
@@ -680,7 +683,7 @@ export function PackagesView() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Amount Paid:</span>
-              <span className="font-bold text-emerald-600">Rs. {reinvestSuccessData.amount.toLocaleString()}</span>
+              <span className="font-bold text-emerald-600">{format(reinvestSuccessData.amount)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Duration:</span>
@@ -688,7 +691,7 @@ export function PackagesView() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Remaining Balance:</span>
-              <span className="font-bold text-slate-900">Rs. {userBalance.toLocaleString()}</span>
+              <span className="font-bold text-slate-900">{format(userBalance)}</span>
             </div>
           </div>
           <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800 text-[11px] font-medium leading-relaxed">
@@ -746,7 +749,7 @@ export function PackagesView() {
             </button>
           </div>
           <p className="text-[13px] text-slate-600 mt-4 leading-relaxed">
-            Send <span className="font-bold">Rs. {selectedPlan.investAmount}</span> to the account above, then submit the transaction ID and screenshot below.
+            Send <span className="font-bold">{format(selectedPlan.investAmount)}</span> to the account above, then submit the transaction ID and screenshot below.
           </p>
         </div>
 
@@ -889,7 +892,7 @@ export function PackagesView() {
               <div>
                 <h4 className="font-bold text-[14px] text-slate-900">Pay with Wallet Balance</h4>
                 <p className="text-[11px] text-slate-500">
-                  Your Balance: <span className="font-bold text-emerald-700">Rs. {userBalance.toLocaleString()}</span>
+                  Your Balance: <span className="font-bold text-emerald-700">{format(userBalance)}</span>
                 </p>
               </div>
             </div>
@@ -899,7 +902,7 @@ export function PackagesView() {
               </span>
             ) : (
               <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
-                Needs Rs. {(selectedPlan.investAmount - userBalance).toLocaleString()} more
+                Needs {format(selectedPlan.investAmount - userBalance)} more
               </span>
             )}
           </div>
@@ -923,13 +926,13 @@ export function PackagesView() {
               ) : (
                 <>
                   <Zap size={16} />
-                  <span>Activate Plan with Balance (Rs. {selectedPlan.investAmount.toLocaleString()})</span>
+                  <span>Activate Plan with Balance ({format(selectedPlan.investAmount)})</span>
                 </>
               )}
             </button>
           ) : (
             <div className="text-[11px] text-slate-500 bg-white/70 p-2.5 rounded-xl border border-slate-200">
-              Aapke account mein Rs. {(selectedPlan.investAmount - userBalance).toLocaleString()} kam hain. Neeche EasyPaisa ya JazzCash se manual payment karein.
+              Aapke account mein {format(selectedPlan.investAmount - userBalance)} kam hain. Neeche EasyPaisa ya JazzCash se manual payment karein.
             </div>
           )}
         </div>
@@ -982,11 +985,16 @@ export function PackagesView() {
       className="p-4 space-y-6 pb-12"
     >
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-3">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight drop-shadow-sm mb-1">{plans.length || 10} Reward Plans</h2>
-          <p className="text-[13px] font-medium text-slate-600 bg-white/70 px-3 py-2.5 rounded-xl border border-white backdrop-blur-sm leading-relaxed shadow-sm">
-            Earn more every day! Choose a plan and invite friends to maximize your total user reward.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 tracking-tight drop-shadow-sm mb-1">{plans.length || 10} Reward Plans</h2>
+            <p className="text-[13px] font-medium text-slate-600 bg-white/70 px-3 py-2.5 rounded-xl border border-white backdrop-blur-sm leading-relaxed shadow-sm">
+              Earn more every day! Choose a plan and invite friends to maximize your total user reward.
+            </p>
+          </div>
+          <div className="self-start sm:self-center shrink-0">
+            <CurrencySwitcherTrigger showName />
+          </div>
         </div>
 
         {/* Active Plan Status Banner for Logged In User */}
@@ -1069,7 +1077,7 @@ export function PackagesView() {
                           </span>
                         )}
                       </div>
-                      <p className="text-white/90 text-xs font-medium">Rs. {plan.investAmount.toLocaleString()} • {plan.totalDays} Days</p>
+                      <p className="text-white/90 text-xs font-medium">{format(plan.investAmount)} • {plan.totalDays} Days</p>
                     </div>
                   </div>
                   {plan.badgeTag && (
@@ -1086,29 +1094,29 @@ export function PackagesView() {
                       <div className="text-center">
                         <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest mb-0.5">Invest</p>
                         <p className="font-bold text-sm text-slate-800">
-                          {plan.investAmount.toLocaleString()}<span className="text-[9px] text-slate-400 font-normal ml-0.5">PKR</span>
+                          {format(plan.investAmount)}
                         </p>
                       </div>
                       <div className="text-center">
                         <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest mb-0.5">Daily</p>
                         <p className={`font-bold text-sm text-[#0F7A50]`}>
-                          {plan.dailyReturn.toLocaleString()}<span className="text-[9px] text-slate-400 font-normal ml-0.5">PKR</span>
+                          {format(plan.dailyReturn)}
                         </p>
                       </div>
                       <div className="text-center">
                         <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest mb-0.5">Total</p>
                         <p className="font-bold text-sm text-slate-800">
-                          {totalRewardVal.toLocaleString()}<span className="text-[9px] text-slate-400 font-normal ml-0.5">PKR</span>
+                          {format(totalRewardVal)}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-2 mb-6">
                       {[
-                        `${plan.totalDays}-Day Reward: Rs. ${cycleRewardVal.toLocaleString()}`,
+                        `${plan.totalDays}-Day Reward: ${format(cycleRewardVal)}`,
                         `Members Required: ${plan.requiredReferrals}`,
-                        `Free Bonus: Rs. ${plan.referralBonus.toLocaleString()} (${referralBonusRate}x Members)`,
-                        `User Total Reward: Rs. ${totalRewardVal.toLocaleString()}`
+                        `Free Bonus: ${format(plan.referralBonus)} (${referralBonusRate}x Members)`,
+                        `User Total Reward: ${format(totalRewardVal)}`
                       ].map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-2.5 text-[13px] font-medium text-slate-600">
                           <CheckCircle2 size={16} className="text-[#0F7A50]" strokeWidth={2.5} />
@@ -1142,7 +1150,7 @@ export function PackagesView() {
                       onClick={() => setSelectedPlanId(plan.id)}
                       className="w-full bg-[#0F7A50] text-white font-semibold py-3.5 rounded-xl transition-all shadow-md shadow-[#0F7A50]/20 hover:bg-[#0c6140]"
                     >
-                      Invest Rs. {plan.investAmount.toLocaleString()}
+                      Invest {format(plan.investAmount)}
                     </motion.button>
                   )}
                 </div>

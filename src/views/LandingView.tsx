@@ -37,6 +37,8 @@ import {
 } from '../lib/economics';
 import { ProfitCalculator } from '../components/ProfitCalculator';
 import { ThemeStudioTriggerButton } from '../components/ThemeFontStudioModal';
+import { useCurrency } from '../context/CurrencyContext';
+import { CurrencySwitcherTrigger } from '../components/CurrencySwitcherModal';
 
 interface LandingViewProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
@@ -85,6 +87,7 @@ const LivePayoutTicker = React.memo(function LivePayoutTicker() {
 
 export function LandingView({ onOpenAuth }: LandingViewProps) {
   const branding = useSiteBranding();
+  const { format } = useCurrency();
   const activePreset =
     BRAND_ICON_PRESETS.find((p) => p.key === branding.site_icon_preset) ||
     BRAND_ICON_PRESETS[0];
@@ -254,8 +257,9 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
             </div>
           </div>
 
-          {/* Right: Theme Studio Trigger + Login & Register Buttons */}
+          {/* Right: Theme Studio Trigger + Currency Switcher + Login & Register Buttons */}
           <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
+            <CurrencySwitcherTrigger />
             <ThemeStudioTriggerButton />
             <button
               type="button"
@@ -685,11 +689,8 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                     {plan.name || `Plan ${planNum}`}
                                   </h4>
                                   <div className="mt-0.5 sm:mt-1 flex items-baseline flex-wrap gap-1">
-                                    <span className="text-[9px] sm:text-[11px] font-extrabold uppercase tracking-wider text-white/90">
-                                      Rs.
-                                    </span>
                                     <span className="text-base sm:text-2xl font-black tracking-tight text-white drop-shadow-xs">
-                                      {Number(plan.investAmount).toLocaleString()}
+                                      {format(plan.investAmount)}
                                     </span>
                                     <span className="text-[9px] sm:text-[11px] font-bold text-white bg-black/20 px-1.5 py-0.5 rounded-md ml-auto sm:ml-1">
                                       {totalDays}d
@@ -706,7 +707,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                       Invest
                                     </p>
                                     <p className="font-black text-xs text-slate-800 mt-0.5">
-                                      Rs. {Number(plan.investAmount).toLocaleString()}
+                                      {format(plan.investAmount)}
                                     </p>
                                   </div>
                                   <div className="border-x border-slate-200/80">
@@ -714,7 +715,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                       Daily
                                     </p>
                                     <p className="font-black text-xs text-emerald-600 mt-0.5">
-                                      Rs. {Number(plan.dailyReturn).toLocaleString()}
+                                      {format(plan.dailyReturn)}
                                     </p>
                                   </div>
                                   <div>
@@ -722,7 +723,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                       Total
                                     </p>
                                     <p className="font-black text-xs text-indigo-600 mt-0.5">
-                                      Rs. {Number(totalUserReward).toLocaleString()}
+                                      {format(totalUserReward)}
                                     </p>
                                   </div>
                                 </div>
@@ -736,7 +737,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                     <span>Daily</span>
                                   </span>
                                   <span className="font-black text-emerald-600">
-                                    Rs. {Number(plan.dailyReturn).toLocaleString()}/d
+                                    {format(plan.dailyReturn)}/d
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-0.5 sm:py-1 border-b border-slate-100">
@@ -745,7 +746,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                     <span>{totalDays}d Return</span>
                                   </span>
                                   <span className="font-extrabold text-slate-800">
-                                    Rs. {Number(thirtyDayReward).toLocaleString()}
+                                    {format(thirtyDayReward)}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between py-0.5 sm:py-1 border-b border-slate-100">
@@ -763,7 +764,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                     <span>Ref Bonus</span>
                                   </span>
                                   <span className="font-extrabold text-amber-600">
-                                    +Rs. {Number(refBonusTotal).toLocaleString()}
+                                    +{format(refBonusTotal)}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between bg-emerald-50/80 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-emerald-100 mt-1">
@@ -771,7 +772,7 @@ export function LandingView({ onOpenAuth }: LandingViewProps) {
                                     Total
                                   </span>
                                   <span className="font-black text-xs sm:text-base text-emerald-700">
-                                    Rs. {Number(totalUserReward).toLocaleString()}
+                                    {format(totalUserReward)}
                                   </span>
                                 </div>
                               </div>

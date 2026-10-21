@@ -4,6 +4,8 @@ import React, { useEffect, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { AppPageShell } from '@/src/components/AppPageShell';
+import { TactileThemeProvider } from '@/src/context/TactileThemeContext';
+import { CurrencyProvider } from '@/src/context/CurrencyContext';
 import { supabase, isSupabaseConfigured } from '@/src/lib/supabase';
 import { initSecurity } from '@/src/lib/sys';
 import { trackPageView } from '@/src/lib/tracking';
@@ -150,11 +152,15 @@ export default function HomePage() {
 
   if (!session) {
     return (
-      <LandingView
-        onOpenAuth={(mode) => {
-          router.push(`/auth?mode=${mode}`);
-        }}
-      />
+      <TactileThemeProvider defaultTheme="astro-neu" defaultFont="tech-modern">
+        <CurrencyProvider>
+          <LandingView
+            onOpenAuth={(mode) => {
+              router.push(`/auth?mode=${mode}`);
+            }}
+          />
+        </CurrencyProvider>
+      </TactileThemeProvider>
     );
   }
 

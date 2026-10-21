@@ -11,6 +11,11 @@ const ThemeStudioTriggerButton = dynamic(
   { ssr: false }
 );
 
+const CurrencySwitcherTrigger = dynamic(
+  () => import('./CurrencySwitcherModal').then((m) => m.CurrencySwitcherTrigger),
+  { ssr: false }
+);
+
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: TabType;
@@ -149,17 +154,20 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
                 </div>
               </div>
 
-              <button
-                onClick={handleRefresh}
-                title="Refresh Page"
-                className={`p-2 rounded-xl border transition-transform active:scale-95 shrink-0 cursor-pointer ${
-                  isDarkTheme
-                    ? 'bg-slate-800/80 border-white/15 text-slate-200 hover:text-white'
-                    : 'bg-slate-100/90 border-slate-200/80 text-slate-700 hover:text-emerald-700'
-                }`}
-              >
-                <RefreshCw size={15} />
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <CurrencySwitcherTrigger />
+                <button
+                  onClick={handleRefresh}
+                  title="Refresh Page"
+                  className={`p-2 rounded-xl border transition-transform active:scale-95 shrink-0 cursor-pointer ${
+                    isDarkTheme
+                      ? 'bg-slate-800/80 border-white/15 text-slate-200 hover:text-white'
+                      : 'bg-slate-100/90 border-slate-200/80 text-slate-700 hover:text-emerald-700'
+                  }`}
+                >
+                  <RefreshCw size={15} />
+                </button>
+              </div>
             </div>
 
             {/* Sidebar Navigation Links */}
@@ -202,9 +210,19 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
               <PWAInstallMenuItem />
 
               {/* Theme, Font & Sound Studio Button in Desktop Sidebar */}
-              <div className="pt-1.5">
+              <div className="pt-1.5 space-y-2">
                 <ThemeStudioTriggerButton
                   className={`w-full justify-start px-4 py-3 rounded-2xl font-extrabold border ${
+                    isDarkTheme
+                      ? 'bg-slate-900/80 hover:bg-slate-800 text-slate-100 border-white/15'
+                      : 'bg-white/90 hover:bg-white text-slate-800 border-slate-200/90 shadow-xs'
+                  }`}
+                />
+
+                {/* Currency Switcher in Desktop Sidebar */}
+                <CurrencySwitcherTrigger
+                  showName
+                  className={`w-full justify-between px-4 py-3 rounded-2xl font-extrabold border ${
                     isDarkTheme
                       ? 'bg-slate-900/80 hover:bg-slate-800 text-slate-100 border-white/15'
                       : 'bg-white/90 hover:bg-white text-slate-800 border-slate-200/90 shadow-xs'
