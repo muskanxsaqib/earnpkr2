@@ -56,7 +56,7 @@ async function runTestSuite() {
         plan: {
           id: 1,
           plan_number: 1,
-          name: 'Starter Plan',
+          name: 'Mini Plan',
           plan_price: 250,
           daily_reward: 20,
           total_days: 30,
@@ -70,7 +70,7 @@ async function runTestSuite() {
         },
         metaMap: {
           '1': {
-            name: 'Starter Plan',
+            name: 'Mini Plan',
             icon: 'flame',
             themeKey: 'purple',
             total_days: 30,
