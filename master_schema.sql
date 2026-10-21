@@ -490,7 +490,7 @@ DECLARE
 BEGIN
   v_referral_code := substring(md5(random()::text) from 1 for 6);
   
-  IF new.email = 'saqib242saqib@gmail.com' OR new.email = 'admin@gmail.com' THEN
+  IF new.email = 'saqib242saqib@gmail.com' OR new.email = 'admin@gmail.com' OR new.email = 'applehousebilling242@gmail.com' THEN
     v_role := 'admin';
   ELSE
     v_role := 'user';
