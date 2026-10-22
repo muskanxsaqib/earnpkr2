@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import AntiScrapeProtectionShield from "@/src/components/AntiScrapeProtectionShield";
 import AntiCloneSecurityKillswitch from "@/src/components/AntiCloneSecurityKillswitch";
+import { DatabaseSetupBanner } from "@/src/components/DatabaseSetupBanner";
 import "../index.css";
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <DatabaseSetupBanner />
         <AntiScrapeProtectionShield />
         <AntiCloneSecurityKillswitch />
         {children}

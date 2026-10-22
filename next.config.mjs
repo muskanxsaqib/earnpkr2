@@ -1,4 +1,18 @@
 /** @type {import('next').NextConfig} */
+const resolvedSupabaseUrl = (
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
+  ''
+).trim();
+
+const resolvedSupabaseAnonKey = (
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  ''
+).trim();
+
 const nextConfig = {
   reactStrictMode: false,
   compress: true,
@@ -17,8 +31,8 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'motion/react'],
   },
   env: {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mmvchbnfhnnhcrtjsmjc.supabase.co',
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_z8-PNTbIPrII-mPZWmatrg_aOnL8X91',
+    NEXT_PUBLIC_SUPABASE_URL: resolvedSupabaseUrl,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: resolvedSupabaseAnonKey,
   },
   async headers() {
     return [

@@ -16,8 +16,8 @@ try {
   // Ignore
 }
 
-const rawUrl = nextUrl || viteUrl || '';
-const rawAnonKey = nextAnonKey || viteAnonKey || '';
+const rawUrl = (nextUrl || viteUrl || process.env.SUPABASE_URL || '').trim();
+const rawAnonKey = (nextAnonKey || viteAnonKey || process.env.SUPABASE_ANON_KEY || '').trim();
 
 export const isSupabaseConfigured = Boolean(
   rawUrl &&
@@ -27,6 +27,12 @@ export const isSupabaseConfigured = Boolean(
   !rawUrl.includes('your-project') &&
   !rawUrl.includes('placeholder')
 );
+
+export function getSupabaseProjectRef(): string | null {
+  if (!rawUrl) return null;
+  const match = rawUrl.match(/https:\/\/([^.]+)\.supabase\.co/);
+  return match ? match[1] : null;
+}
 
 const supabaseUrl = isSupabaseConfigured ? rawUrl : 'https://placeholder-project.supabase.co';
 const supabaseAnonKey = isSupabaseConfigured ? rawAnonKey : 'placeholder-anon-key';
