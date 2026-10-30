@@ -4,7 +4,7 @@ import { INVESTMENT_PLANS as fallbackPlans } from '../data';
 import { parsePlansMetaJson, mergePlanWithMeta } from '../lib/economics';
 import { fetchCurrentUserProfile } from '../lib/userProfile';
 import { uploadToImageKit } from '../lib/imagekit';
-import { CheckCircle2, Zap, Flame, Rocket, Diamond, Crown, Briefcase, ArrowLeft, Copy, Upload, Clock } from 'lucide-react';
+import { CheckCircle2, Zap, Flame, Rocket, Diamond, Crown, Briefcase, ArrowLeft, Copy, Upload, Clock, PlusCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import CryptoJS from 'crypto-js';
 import { useCurrency } from '../context/CurrencyContext';
@@ -64,14 +64,19 @@ export function PackagesView() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   const [submittedData, setSubmittedData] = useState<any>(null);
+  const [pendingDepositNotice, setPendingDepositNotice] = useState<any | null>(null);
   const [userBalance, setUserBalance] = useState<number>(0);
   const [isReinvesting, setIsReinvesting] = useState<boolean>(false);
   const [reinvestSuccessData, setReinvestSuccessData] = useState<any | null>(null);
   const [activeUserPlans, setActiveUserPlans] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const storedUserId = localStorage.getItem('last_active_user_id');
         const cached = localStorage.getItem('user_active_plans_cache');
-        if (cached) return JSON.parse(cached);
+        if (cached && storedUserId) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        }
       } catch (e) {}
     }
     return [];
@@ -266,9 +271,12 @@ export function PackagesView() {
         user_id: userData.user.id,
         plan_id: planDbId,
         platform_method_id: paymentMethodDbId,
+        amount: selectedPlan.investAmount,
+        method: selectedPaymentMethod.name || senderMethod,
         user_account_name: combinedSenderName,
         user_account_number: senderAccount,
-        screenshot_url: imageUrl
+        screenshot_url: imageUrl,
+        status: 'pending'
       });
 
       if (insertError) throw insertError;
@@ -276,15 +284,18 @@ export function PackagesView() {
       // Broadcast the deposit insert so admin and other tabs update instantly
       await broadcastChange('deposits', 'insert', { user_id: userData.user.id });
 
-      // Save submission details for the under review screen
-      setSubmittedData({
+      const newSubmittedData = {
         planName: selectedPlan.name,
         amount: selectedPlan.investAmount,
         method: senderMethod,
         sender: senderName,
         account: senderAccount,
         imageUrl: imageUrl || previewUrl
-      });
+      };
+
+      // Save submission details for the under review screen & notice
+      setSubmittedData(newSubmittedData);
+      setPendingDepositNotice(newSubmittedData);
       setShowSuccessScreen(true);
 
       // Clear the form fields
@@ -342,7 +353,10 @@ export function PackagesView() {
   const checkPendingDeposit = async (currentPlans?: any[]) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return;
+      if (!userData?.user) {
+        setPendingDepositNotice(null);
+        return;
+      }
 
       const { data: pending } = await supabase
         .from('deposits')
@@ -354,20 +368,19 @@ export function PackagesView() {
       if (pending && pending.length > 0) {
         const dep = pending[0];
         const planList = currentPlans || plans;
-        const matchingPlan = planList.find(p => p.dbId === dep.plan_id);
+        const matchingPlan = planList.find(p => p.dbId === dep.plan_id || String(p.planNumber) === String(dep.plan_id) || p.id === `plan_${dep.plan_id}`);
         
-        setSubmittedData({
+        const pendingData = {
           planName: matchingPlan ? matchingPlan.name : `Plan #${dep.plan_id}`,
-          amount: matchingPlan ? matchingPlan.investAmount : 0,
-          method: dep.user_account_name ? dep.user_account_name.split(' - ')[0] : 'EasyPaisa',
+          amount: dep.amount ? Number(dep.amount) : (matchingPlan ? matchingPlan.investAmount : 0),
+          method: dep.user_account_name ? dep.user_account_name.split(' - ')[0] : (dep.method || 'EasyPaisa'),
           sender: dep.user_account_name || '',
           account: dep.user_account_number || '',
           imageUrl: dep.screenshot_url
-        });
-        setShowSuccessScreen(true);
+        };
+        setPendingDepositNotice(pendingData);
       } else {
-        setShowSuccessScreen(false);
-        setSubmittedData(null);
+        setPendingDepositNotice(null);
       }
     } catch (e) {
       console.error("Error checking pending deposit:", e);
@@ -455,12 +468,8 @@ export function PackagesView() {
       const userProf = await fetchCurrentUserProfile();
       if (userProf) {
         setUserBalance(Number(userProf.balance || 0));
-        if (userProf.active_plans && Array.isArray(userProf.active_plans) && userProf.active_plans.length > 0) {
+        if (userProf.active_plans && Array.isArray(userProf.active_plans)) {
           foundActivePlans = userProf.active_plans;
-          setActiveUserPlans(foundActivePlans);
-          try {
-            localStorage.setItem('user_active_plans_cache', JSON.stringify(foundActivePlans));
-          } catch (e) {}
         }
       }
     } catch (e) {
@@ -485,6 +494,10 @@ export function PackagesView() {
       const { data: sessionData } = await supabase.auth.getSession();
       const currentUserId = sessionData?.session?.user?.id;
       if (currentUserId) {
+        try {
+          localStorage.setItem('last_active_user_id', currentUserId);
+        } catch (e) {}
+
         const { data: userPlansData } = await supabase
           .from('user_plans')
           .select('id, plan_id, status, plan:plans(id, plan_number)')
@@ -509,15 +522,23 @@ export function PackagesView() {
           }
         }
 
-        if (allActive.length > 0) {
-          setActiveUserPlans(allActive);
-          try {
+        setActiveUserPlans(allActive);
+        try {
+          if (allActive.length > 0) {
             localStorage.setItem('user_active_plans_cache', JSON.stringify(allActive));
-          } catch (e) {}
-        }
+          } else {
+            localStorage.removeItem('user_active_plans_cache');
+          }
+        } catch (e) {}
+      } else {
+        setActiveUserPlans([]);
+        try {
+          localStorage.removeItem('user_active_plans_cache');
+        } catch (e) {}
       }
     } catch (err) {
       console.warn('Error fetching active user plans for packages:', err);
+      setActiveUserPlans([]);
     }
 
     await checkPendingDeposit(mappedPlans);
@@ -644,17 +665,27 @@ export function PackagesView() {
             )}
           </div>
 
-          <button 
-            onClick={() => {
-              setShowSuccessScreen(false);
-              setSubmittedData(null);
-              setSelectedPaymentMethod(null);
-              setSelectedPlanId(null);
-            }}
-            className="w-full bg-[#0F7A50] hover:bg-[#0c6140] text-white font-semibold py-3 rounded-xl shadow-sm transition-colors mt-4 text-[14px]"
-          >
-            Go Back to Plans
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+            <button 
+              onClick={() => {
+                setShowSuccessScreen(false);
+                setSubmittedData(null);
+                setSelectedPaymentMethod(null);
+                setSelectedPlanId(null);
+              }}
+              className="flex-1 bg-[#0F7A50] hover:bg-[#0c6140] text-white font-bold py-3 rounded-xl shadow-sm transition-colors text-[14px] flex items-center justify-center gap-2"
+            >
+              <PlusCircle size={16} />
+              <span>Deposit Another Plan</span>
+            </button>
+            <a
+              href="/my-plans"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl transition-colors text-[14px] flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 size={16} className="text-[#0F7A50]" />
+              <span>View My Plans</span>
+            </a>
+          </div>
         </div>
       </motion.div>
     );
@@ -1027,6 +1058,39 @@ export function PackagesView() {
             </a>
           </div>
         )}
+
+        {/* Pending Deposit Notice Banner */}
+        {pendingDepositNotice && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200">
+                <Clock size={20} className="animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-800">
+                    Deposit Under Review
+                  </span>
+                  <span className="text-[10px] font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">
+                    {pendingDepositNotice.planName} • {format(pendingDepositNotice.amount)}
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-amber-800/80 font-medium mt-0.5">
+                  Aapka payment deposit review mein hai. Aap mazeed kisi bhi plan mein investment / deposit kisi bhi waqt bhej sakte hain!
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setSubmittedData(pendingDepositNotice);
+                setShowSuccessScreen(true);
+              }}
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <span>View Deposit Receipt</span>
+            </button>
+          </div>
+        )}
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
@@ -1128,20 +1192,22 @@ export function PackagesView() {
 
                   {isCurrentPlan ? (
                     <div className="space-y-2">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSelectedPlanId(plan.id)}
+                        className="w-full bg-[#0F7A50] hover:bg-[#0c6140] text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-[#0F7A50]/20 flex items-center justify-center gap-2 text-sm active:scale-98 cursor-pointer"
+                      >
+                        <PlusCircle size={16} />
+                        <span>Deposit More / Buy Again ({format(plan.investAmount)})</span>
+                      </motion.button>
                       <a
                         href="/my-plans"
-                        className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 text-center text-sm active:scale-98"
+                        className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 text-center text-xs"
                       >
-                        <CheckCircle2 size={18} strokeWidth={2.5} />
-                        <span>Current Plan (View & Claim)</span>
+                        <CheckCircle2 size={14} className="text-emerald-600" />
+                        <span>Active Plan (View in My Plans & Claim)</span>
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPlanId(plan.id)}
-                        className="w-full text-slate-500 hover:text-slate-800 text-[11px] font-bold text-center transition-colors underline cursor-pointer py-0.5 block"
-                      >
-                        + Buy Again / Stacking
-                      </button>
                     </div>
                   ) : (
                     <motion.button 

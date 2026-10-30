@@ -74,8 +74,9 @@ export function MyPlansView() {
   const [plans, setPlans] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const storedUserId = localStorage.getItem('last_active_user_id');
         const cached = localStorage.getItem('cached_my_plans_list');
-        if (cached) {
+        if (cached && storedUserId) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         }
@@ -86,8 +87,9 @@ export function MyPlansView() {
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const storedUserId = localStorage.getItem('last_active_user_id');
         const cached = localStorage.getItem('cached_my_plans_list');
-        if (cached && JSON.parse(cached).length > 0) return false;
+        if (cached && storedUserId && JSON.parse(cached).length > 0) return false;
       } catch (e) {}
     }
     return true;
@@ -357,6 +359,9 @@ export function MyPlansView() {
         } catch (e) {}
       } else {
         setPlans([]);
+        try {
+          localStorage.removeItem('cached_my_plans_list');
+        } catch (e) {}
       }
     } catch (err) {
       console.error("Error fetching plans:", err);

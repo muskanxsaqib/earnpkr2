@@ -28,8 +28,9 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
   const [balance, setBalance] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const storedUserId = localStorage.getItem('last_active_user_id');
         const cached = localStorage.getItem('user_cached_balance');
-        if (cached) return Number(cached) || 0;
+        if (cached && storedUserId) return Number(cached) || 0;
       } catch (e) {}
     }
     return 0;
@@ -37,8 +38,9 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
   const [totalEarnings, setTotalEarnings] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const storedUserId = localStorage.getItem('last_active_user_id');
         const cached = localStorage.getItem('user_cached_total_earnings');
-        if (cached) return Number(cached) || 0;
+        if (cached && storedUserId) return Number(cached) || 0;
       } catch (e) {}
     }
     return 0;
@@ -314,6 +316,8 @@ export function HomeView({ onNavigateToTab }: { onNavigateToTab?: (tab: 'home' |
         
       if (userPlans && userPlans.length > 0) {
         setActivePlan(userPlans[0]);
+      } else {
+        setActivePlan(null);
       }
       
       // Calculate from collected daily rewards

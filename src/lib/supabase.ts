@@ -43,10 +43,36 @@ if (!isSupabaseConfigured) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Automatically synchronize Supabase session with secure HttpOnly cookies
+export function clearUserLocalSessionCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('user_active_plans_cache');
+    localStorage.removeItem('cached_my_plans_list');
+    localStorage.removeItem('user_cached_balance');
+    localStorage.removeItem('user_cached_total_earnings');
+    localStorage.removeItem('last_active_user_id');
+  } catch (e) {
+    // Ignore
+  }
+}
+
+// Automatically synchronize Supabase session with secure HttpOnly cookies & manage user session cache
 if (typeof window !== 'undefined') {
   supabase.auth.onAuthStateChange(async (event, session) => {
     try {
+      const currentStoredUserId = localStorage.getItem('last_active_user_id');
+      const newUserId = session?.user?.id;
+
+      if (event === 'SIGNED_OUT' || !session) {
+        clearUserLocalSessionCache();
+      } else if (newUserId && currentStoredUserId && newUserId !== currentStoredUserId) {
+        // Different user logged in on this browser - clear old user's caches immediately
+        clearUserLocalSessionCache();
+        localStorage.setItem('last_active_user_id', newUserId);
+      } else if (newUserId) {
+        localStorage.setItem('last_active_user_id', newUserId);
+      }
+
       if (session?.access_token) {
         await fetch('/api/auth/session', {
           method: 'POST',

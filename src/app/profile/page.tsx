@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { AppPageShell } from '@/src/components/AppPageShell';
-import { supabase } from '@/src/lib/supabase';
+import { supabase, clearUserLocalSessionCache } from '@/src/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const ProfileView = dynamic(
@@ -25,6 +25,7 @@ function ProfileContent() {
   const view = searchParams?.get('view') || 'main';
 
   const handleLogout = async () => {
+    clearUserLocalSessionCache();
     await supabase.auth.signOut();
     router.push('/login');
   };
