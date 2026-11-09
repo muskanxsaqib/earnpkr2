@@ -50,7 +50,9 @@ export async function verifyAdminRequest(req: Request): Promise<boolean> {
         if (
           user.email === 'saqib242saqib@gmail.com' ||
           user.email === 'admin@gmail.com' ||
-          user.email === 'saqib@gmail.com'
+          user.email === 'saqib@gmail.com' ||
+          user.email === 'profitnest531@gmail.com' ||
+          user.email === 'applehousebilling242@gmail.com'
         ) {
           return true;
         }

@@ -4,7 +4,7 @@ import {
   TrendingUp, TrendingDown, Award, Clipboard, Copy, Check, ChevronDown, ChevronUp, ChevronRight, ArrowLeft,
   Clock, FileText, Download, BarChart2, PieChart, Search, Eye, EyeOff, X, MessageSquare, Mail, Megaphone,
   Plus, AlertTriangle, Sparkles, RefreshCw, Calculator, Upload, Globe, Palette, Type, Volume2, CreditCard, Lock, LayoutGrid,
-  Ticket, ShieldCheck, Image as ImageIcon, Zap
+  Ticket, ShieldCheck, Image as ImageIcon, Zap, Ban, Unlock
 } from 'lucide-react';
 import { supabase, broadcastChange } from '../lib/supabase';
 import { hashSHA256, isSHA256 } from '../lib/crypto';
@@ -990,34 +990,24 @@ export function AdminView() {
   };
 
   const handleBanUser = async (userId: string) => {
-    const reason = prompt('Enter reason for banning this user (e.g., Fake Screenshot):');
+    const reason = prompt('Enter reason for banning this user (e.g., Fake Screenshot, Multiple Accounts):');
     if (reason === null) return;
     try {
-      let { error } = await supabase
-        .from('profiles')
-        .update({ status: 'banned', is_banned: true, ban_reason: reason })
-        .eq('id', userId);
-
-      // Fallback if 'status' or 'is_banned' column is missing in schema cache
-      if (error) {
-        const fallback1 = await supabase
-          .from('profiles')
-          .update({ is_banned: true, ban_reason: reason })
-          .eq('id', userId);
-        if (!fallback1.error) {
-          error = null;
-        } else {
-          const fallback2 = await supabase
-            .from('profiles')
-            .update({ status: 'banned', ban_reason: reason })
-            .eq('id', userId);
-          error = fallback2.error;
-        }
+      const adminToken = typeof window !== 'undefined' ? sessionStorage.getItem('admin_session_token') || '' : '';
+      const apiRes = await fetch('/api/admin/users/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ user_id: userId, is_banned: true, ban_reason: reason || 'Account suspended by administrator.' }),
+      });
+      const resJson = await apiRes.json().catch(() => null);
+      if (!apiRes.ok || !resJson?.ok) {
+        throw new Error(resJson?.error || 'Failed to ban user on server.');
       }
 
-      if (error) throw error;
       await broadcastChange('profiles', 'ban', { userId, reason });
       fetchData();
+      setSelectedUser((prev: any) => (prev && prev.id === userId ? { ...prev, is_banned: true, status: 'banned', ban_reason: reason } : prev));
+      alert('User has been banned successfully.');
     } catch (e: any) {
       console.error('Failed to ban user:', e);
       alert('Error banning user: ' + e.message);
@@ -1025,33 +1015,23 @@ export function AdminView() {
   };
 
   const handleUnbanUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to unban this user?')) return;
+    if (!confirm('Are you sure you want to unban this user and restore full access?')) return;
     try {
-      let { error } = await supabase
-        .from('profiles')
-        .update({ status: 'active', is_banned: false, ban_reason: null })
-        .eq('id', userId);
-
-      // Fallback if 'status' or 'is_banned' column is missing in schema cache
-      if (error) {
-        const fallback1 = await supabase
-          .from('profiles')
-          .update({ is_banned: false, ban_reason: null })
-          .eq('id', userId);
-        if (!fallback1.error) {
-          error = null;
-        } else {
-          const fallback2 = await supabase
-            .from('profiles')
-            .update({ status: 'active', ban_reason: null })
-            .eq('id', userId);
-          error = fallback2.error;
-        }
+      const adminToken = typeof window !== 'undefined' ? sessionStorage.getItem('admin_session_token') || '' : '';
+      const apiRes = await fetch('/api/admin/users/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ user_id: userId, is_banned: false }),
+      });
+      const resJson = await apiRes.json().catch(() => null);
+      if (!apiRes.ok || !resJson?.ok) {
+        throw new Error(resJson?.error || 'Failed to unban user on server.');
       }
 
-      if (error) throw error;
       await broadcastChange('profiles', 'unban', { userId });
       fetchData();
+      setSelectedUser((prev: any) => (prev && prev.id === userId ? { ...prev, is_banned: false, status: 'active', ban_reason: null } : prev));
+      alert('User has been unbanned successfully.');
     } catch (e: any) {
       console.error('Failed to unban user:', e);
       alert('Error unbanning user: ' + e.message);
@@ -3401,17 +3381,17 @@ GROUP BY p.username;`
                             <button
                               type="button"
                               onClick={() => handleUnbanUser(u.id)}
-                              className="py-2 px-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-700 cursor-pointer"
+                              className="py-2 px-3 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center justify-center gap-1 cursor-pointer transition"
                             >
-                              Unban
+                              <Unlock className="w-3.5 h-3.5" /> Unban
                             </button>
                           ) : (
                             <button
                               type="button"
                               onClick={() => handleBanUser(u.id)}
-                              className="py-2 px-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-700 cursor-pointer"
+                              className="py-2 px-3 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-sm flex items-center justify-center gap-1 cursor-pointer transition"
                             >
-                              Ban
+                              <Ban className="w-3.5 h-3.5" /> Ban
                             </button>
                           )}
                           <button
@@ -3536,17 +3516,21 @@ GROUP BY p.username;`
                                   </button>
                                   {(u.status === 'banned' || u.is_banned === true) ? (
                                     <button
+                                      type="button"
                                       onClick={() => handleUnbanUser(u.id)}
-                                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
+                                      className="px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1 transition cursor-pointer"
+                                      title="Unban this user"
                                     >
-                                      Unban
+                                      <Unlock className="w-3.5 h-3.5" /> Unban
                                     </button>
                                   ) : (
                                     <button
+                                      type="button"
                                       onClick={() => handleBanUser(u.id)}
-                                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition"
+                                      className="px-3 py-1.5 rounded-lg text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-sm flex items-center gap-1 transition cursor-pointer"
+                                      title="Ban this user"
                                     >
-                                      Ban
+                                      <Ban className="w-3.5 h-3.5" /> Ban
                                     </button>
                                   )}
                                   <button
@@ -3596,8 +3580,8 @@ GROUP BY p.username;`
                               </span>
                             )}
                             {(selectedUser.status === 'banned' || selectedUser.is_banned === true) && (
-                              <span className="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                                Banned
+                              <span className="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
+                                <Ban className="w-3 h-3 text-rose-400" /> Banned
                               </span>
                             )}
                           </div>
@@ -3605,6 +3589,33 @@ GROUP BY p.username;`
                             {selectedUser.username}
                           </h3>
                           <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-mono">ID: {selectedUser.id}</p>
+                          {(selectedUser.status === 'banned' || selectedUser.is_banned === true) ? (
+                            <div className="mt-3 bg-rose-950/60 border border-rose-500/30 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <div className="text-rose-200">
+                                <strong className="text-rose-400">Account is BANNED:</strong> {selectedUser.ban_reason || 'Suspended by admin'}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleUnbanUser(selectedUser.id)}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-lg text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition"
+                              >
+                                <Unlock className="w-3.5 h-3.5" /> Unban Account Now
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-2 flex items-center gap-2">
+                              <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" /> Account Active
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleBanUser(selectedUser.id)}
+                                className="px-2 py-0.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-bold rounded-lg text-[10px] flex items-center gap-1 cursor-pointer transition"
+                              >
+                                <Ban className="w-3 h-3" /> Ban Account
+                              </button>
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={() => setSelectedUser(null)}
@@ -3846,20 +3857,39 @@ GROUP BY p.username;`
                       </div>
 
                       {/* Modal Footer */}
-                      <div className="p-4 border-t border-slate-800 bg-slate-950/70 flex justify-between items-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setGiftingUser(selectedUser);
-                            setSelectedGiftPlanId(plans[0]?.id || 1);
-                          }}
-                          className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 px-4 rounded-xl transition shadow-sm text-xs flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <Zap className="w-4 h-4" /> Gift / Activate Plan
-                        </button>
+                      <div className="p-4 border-t border-slate-800 bg-slate-950/70 flex flex-wrap justify-between items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGiftingUser(selectedUser);
+                              setSelectedGiftPlanId(plans[0]?.id || 1);
+                            }}
+                            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2 px-3.5 rounded-xl transition shadow-sm text-xs flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Zap className="w-4 h-4" /> Gift Plan
+                          </button>
+                          {(selectedUser.status === 'banned' || selectedUser.is_banned === true) ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUnbanUser(selectedUser.id)}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2 px-4 rounded-xl transition shadow-sm text-xs flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Unlock className="w-4 h-4" /> Unban Account
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleBanUser(selectedUser.id)}
+                              className="bg-rose-600 hover:bg-rose-500 text-white font-black py-2 px-4 rounded-xl transition shadow-sm text-xs flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Ban className="w-4 h-4" /> Ban Account
+                            </button>
+                          )}
+                        </div>
                         <button
                           onClick={() => setSelectedUser(null)}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-xl transition shadow-sm text-xs"
+                          className="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold py-2 px-5 rounded-xl transition shadow-sm text-xs cursor-pointer"
                         >
                           Close Account File
                         </button>
