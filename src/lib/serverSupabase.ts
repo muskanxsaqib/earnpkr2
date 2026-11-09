@@ -1,25 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Turnkey defaults ensuring deployed builds work even if hosting env vars are not set
+const DEFAULT_URL = 'https://wdkijwdwjastiehlomqj.supabase.co';
+const DEFAULT_ANON_KEY = 'sb_publishable_0Blcv8X4lq3pPT5AAXkSgA_bIjCaIoP';
+const DEFAULT_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indka2lqd2R3amFzdGllaGxvbXFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5NDE4NzQ2MiwiZXhwIjoyMTA5NzYzNDYyfQ.V-b-KFCcDv9yiya2VklF5Jqic7oneITjC2Pjik3ZIac';
+
 // Environment variables dynamically read for 100% turnkey deployment
 const supabaseUrl = (
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
   process.env.VITE_SUPABASE_URL ||
   process.env.SUPABASE_URL ||
-  ''
+  DEFAULT_URL
 ).trim();
 
 const supabaseAnonKey = (
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
   process.env.SUPABASE_ANON_KEY ||
-  ''
+  DEFAULT_ANON_KEY
 ).trim();
 
 const supabaseServiceKey = (
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
-  supabaseAnonKey
+  DEFAULT_SERVICE_ROLE_KEY
 ).trim();
 
 if (!supabaseUrl || !supabaseAnonKey) {

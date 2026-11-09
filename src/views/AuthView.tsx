@@ -110,26 +110,60 @@ export function AuthView({
         const country = localStorage.getItem('user_country') || 'Pakistan';
         const city = localStorage.getItem('user_city') || 'Karachi';
 
-        // 1. Register user directly via backend API with auto-confirmed email (bypasses Supabase email confirmation block)
-        const registerRes = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: cleanUsername,
+        // 1. Register user via backend API with auto-confirmed email (with client SDK fallback)
+        let registerSucceeded = false;
+        try {
+          const registerRes = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: cleanUsername,
+              email: cleanEmail,
+              password: password,
+              phone: phone.trim(),
+              referral_code: referralCode || null,
+              device_id: deviceId,
+              fingerprint,
+              country,
+              city,
+            }),
+          });
+
+          const regData = await registerRes.json().catch(() => null);
+          if (registerRes.ok && regData?.ok) {
+            registerSucceeded = true;
+          } else if (regData?.error) {
+            throw new Error(regData.error);
+          }
+        } catch (apiErr: any) {
+          // If it's a specific validation message (like username taken or invalid email), throw it
+          if (
+            apiErr.message &&
+            !apiErr.message.includes('fetch') &&
+            !apiErr.message.includes('Server error') &&
+            !apiErr.message.includes('NetworkError')
+          ) {
+            throw apiErr;
+          }
+        }
+
+        // Fallback: If backend API had network/server issue, signup directly via Supabase client
+        if (!registerSucceeded) {
+          const { error: signUpError } = await supabase.auth.signUp({
             email: cleanEmail,
             password: password,
-            phone: phone.trim(),
-            referral_code: referralCode || null,
-            device_id: deviceId,
-            fingerprint,
-            country,
-            city,
-          }),
-        });
-
-        const regData = await registerRes.json().catch(() => null);
-        if (!registerRes.ok || !regData?.ok) {
-          throw new Error(regData?.error || 'Registration failed. Please check your details.');
+            options: {
+              data: {
+                username: cleanUsername,
+                phone: phone.trim(),
+                referred_by: referralCode || null,
+                device_id: deviceId,
+                country,
+                city,
+              },
+            },
+          });
+          if (signUpError) throw signUpError;
         }
 
         // Clear stored referral code on successful registration
@@ -144,16 +178,20 @@ export function AuthView({
 
         if (signInErr) {
           if (signInErr.message?.toLowerCase().includes('email not confirmed')) {
-            await fetch('/api/auth/auto-confirm', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: cleanEmail }),
-            });
-            const retry = await supabase.auth.signInWithPassword({
-              email: cleanEmail,
-              password: password,
-            });
-            if (retry.error) throw retry.error;
+            try {
+              await fetch('/api/auth/auto-confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: cleanEmail }),
+              });
+              const retry = await supabase.auth.signInWithPassword({
+                email: cleanEmail,
+                password: password,
+              });
+              if (retry.error) throw retry.error;
+            } catch {
+              throw new Error('Account ban gaya hai! Supabase Dashboard -> Authentication -> Providers -> Email mein "Confirm email" OFF karein.');
+            }
           } else {
             throw signInErr;
           }

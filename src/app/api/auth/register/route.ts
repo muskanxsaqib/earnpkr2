@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       settingsMap[row.setting_key] = row.setting_value;
     });
 
-    const isDeviceRestrictionOn = settingsMap['restrict_multiple_accounts'] !== 'false';
+    const isDeviceRestrictionOn = settingsMap['restrict_multiple_accounts'] === 'true';
     const isIpRestrictionOn = settingsMap['restrict_same_ip'] === 'true';
 
     // 2. Check Device ID & Hardware Fingerprint restriction

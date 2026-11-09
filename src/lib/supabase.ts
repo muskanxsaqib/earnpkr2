@@ -1,6 +1,10 @@
 /// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js';
 
+// Turnkey defaults ensuring deployed builds work even if hosting env vars are not set
+const DEFAULT_URL = 'https://wdkijwdwjastiehlomqj.supabase.co';
+const DEFAULT_ANON_KEY = 'sb_publishable_0Blcv8X4lq3pPT5AAXkSgA_bIjCaIoP';
+
 // Direct literal references so Next.js Turbopack can statically inline them into client bundle
 const nextUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const nextAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -16,8 +20,8 @@ try {
   // Ignore
 }
 
-const rawUrl = (nextUrl || viteUrl || process.env.SUPABASE_URL || '').trim();
-const rawAnonKey = (nextAnonKey || viteAnonKey || process.env.SUPABASE_ANON_KEY || '').trim();
+const rawUrl = (nextUrl || viteUrl || process.env.SUPABASE_URL || DEFAULT_URL).trim();
+const rawAnonKey = (nextAnonKey || viteAnonKey || process.env.SUPABASE_ANON_KEY || DEFAULT_ANON_KEY).trim();
 
 export const isSupabaseConfigured = Boolean(
   rawUrl &&
@@ -34,8 +38,8 @@ export function getSupabaseProjectRef(): string | null {
   return match ? match[1] : null;
 }
 
-const supabaseUrl = isSupabaseConfigured ? rawUrl : 'https://placeholder-project.supabase.co';
-const supabaseAnonKey = isSupabaseConfigured ? rawAnonKey : 'placeholder-anon-key';
+const supabaseUrl = isSupabaseConfigured ? rawUrl : DEFAULT_URL;
+const supabaseAnonKey = isSupabaseConfigured ? rawAnonKey : DEFAULT_ANON_KEY;
 
 if (!isSupabaseConfigured) {
   console.warn("⚠️ Supabase environment variables are missing or placeholder. Running in local preview mode. Please configure your .env file to enable full database and authentication features.");
