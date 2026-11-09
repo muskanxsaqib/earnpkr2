@@ -490,7 +490,7 @@ DECLARE
 BEGIN
   v_referral_code := substring(md5(random()::text) from 1 for 6);
   
-  IF new.email = 'saqib242saqib@gmail.com' OR new.email = 'admin@gmail.com' OR new.email = 'applehousebilling242@gmail.com' THEN
+  IF new.email = 'saqib242saqib@gmail.com' OR new.email = 'admin@gmail.com' OR new.email = 'applehousebilling242@gmail.com' OR new.email = 'profitnest531@gmail.com' THEN
     v_role := 'admin';
   ELSE
     v_role := 'user';
@@ -1461,7 +1461,7 @@ WITH CHECK (bucket_id = 'receipts');
 --    Admin Actions) LIVE broadcast hongi bina kisi page refresh ke!
 -- ==============================================================================
 
-DO $
+DO $$
 DECLARE
   tbl text;
   target_tables text[] := ARRAY[
@@ -1510,7 +1510,7 @@ BEGIN
       EXECUTE format('ALTER TABLE public.%I REPLICA IDENTITY FULL;', tbl);
     END IF;
   END LOOP;
-END $;
+END $$;
 
 -- 3. Verification Query: Confirm all enabled tables
 SELECT 

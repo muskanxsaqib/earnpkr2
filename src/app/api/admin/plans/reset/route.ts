@@ -22,12 +22,19 @@ export async function POST(req: Request) {
     for (const p of OFFICIAL_PLANS_MATRIX) {
       const corePayload = {
         name: p.name,
-        price: p.plan_price,
+        plan_price: p.plan_price,
+        invest_amount: p.plan_price,
         daily_reward: p.daily_reward,
-        duration_days: p.total_days,
+        daily_return: p.daily_reward,
+        total_days: p.total_days,
+        thirty_day_reward: p.thirty_day_reward,
         plan_number: p.plan_number,
         members_required: p.members_required,
+        required_referrals: p.members_required,
         user_total_reward: p.user_total_reward,
+        icon: p.icon || 'flame',
+        theme_key: p.theme_key || 'purple',
+        is_active: true,
       };
 
       const existingId = existingMap.get(p.plan_number);

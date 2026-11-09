@@ -36,12 +36,10 @@ export async function POST(req: Request) {
 
     const payload: any = {
       name: plan.name,
-      price: priceVal,
       plan_price: priceVal,
       invest_amount: priceVal,
       daily_reward: dailyVal,
       daily_return: dailyVal,
-      duration_days: daysVal,
       total_days: daysVal,
       thirty_day_reward: dailyVal * daysVal,
       members_required: reqMembers,
