@@ -2,7 +2,7 @@
 -- 🚀 SUPABASE MASTER ADMIN SECURITY & SERVICE ROLE RLS LOCKDOWN (FIXED)
 -- ==============================================================================
 -- INSTRUCTIONS:
--- 1. Open Supabase Dashboard: https://supabase.com/dashboard/project/mmvchbnfhnnhcrtjsmjc
+-- 1. Open Supabase Dashboard: https://supabase.com/dashboard/project/wdkijwdwjastiehlomqj
 -- 2. Click "SQL Editor" on the left menu -> Click "New query".
 -- 3. Paste this ENTIRE script and click "Run" (Ctrl + Enter).
 -- ==============================================================================
