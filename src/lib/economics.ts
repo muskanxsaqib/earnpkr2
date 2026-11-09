@@ -284,10 +284,10 @@ export function validatePlanEconomics(
     const lossAmount = Math.abs(calc.platformProfit);
     issues.push({
       code: 'PLATFORM_LOSS',
-      severity: 'error',
-      title: `Unprofitable Plan — Platform Loss of Rs ${lossAmount.toLocaleString()}`,
-      reasonEn: `Platform Revenue is Rs ${calc.platformRevenue.toLocaleString()} (Plan Price Rs ${calc.P.toLocaleString()} + ${calc.M} Members × Rs ${calc.baseMemberPrice} = Rs ${calc.membersRevenue.toLocaleString()}), while User Total Payout is Rs ${calc.actualUserTotalReward.toLocaleString()} (${calc.days}-Day Reward Rs ${calc.actualDurationReward.toLocaleString()} + Referral Bonus Rs ${calc.referralBonusTotal.toLocaleString()}). Payout exceeds revenue by Rs ${lossAmount.toLocaleString()}!`,
-      reasonUr: `Is plan mein Platform Revenue Rs ${calc.platformRevenue.toLocaleString()} hai jabke User ko Total Payout Rs ${calc.actualUserTotalReward.toLocaleString()} dena par raha hai — jis se platform ko har user par Rs ${lossAmount.toLocaleString()} ka seedha NUQSAN (Loss) hoga! Save karne se pehle Daily Reward kam karein ya Required Members barhayein.`,
+      severity: 'warning',
+      title: `Plan Economics Advisory — Deficit of Rs ${lossAmount.toLocaleString()}`,
+      reasonEn: `Platform Revenue is Rs ${calc.platformRevenue.toLocaleString()} (Plan Price Rs ${calc.P.toLocaleString()} + ${calc.M} Members × Rs ${calc.baseMemberPrice} = Rs ${calc.membersRevenue.toLocaleString()}), while User Total Payout is Rs ${calc.actualUserTotalReward.toLocaleString()} (${calc.days}-Day Reward Rs ${calc.actualDurationReward.toLocaleString()} + Referral Bonus Rs ${calc.referralBonusTotal.toLocaleString()}).`,
+      reasonUr: `Is plan mein Platform Revenue Rs ${calc.platformRevenue.toLocaleString()} hai jabke User ko Total Payout Rs ${calc.actualUserTotalReward.toLocaleString()} ban raha hai (Deficit: Rs ${lossAmount.toLocaleString()}). Aap isay freely Save kar sakte hain ya Auto-Fix se balance kar sakte hain.`,
       remedyLabel: `Auto-Fix: Set Members to ${safeMembersRequired}`,
       remedyPatch: {
         members_required: safeMembersRequired,

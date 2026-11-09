@@ -1139,7 +1139,7 @@ export function AdminView() {
       setPlanSaveError(
         firstError
           ? `${firstError.title}: ${firstError.reasonUr}`
-          : 'Plan calculation valid nahi hai (Platform Loss). Save karne se pehle numbers Auto-Fix karein.'
+          : 'Plan numbers durust nahi hain. Plan Price aur Daily Reward check karein.'
       );
       return;
     }
@@ -4722,7 +4722,7 @@ GROUP BY p.username;`
                                 {savingPlan
                                   ? 'Saving Plan...'
                                   : !activeEditValidation.canSave
-                                  ? 'Fix Calculation Loss to Save'
+                                  ? 'Fix Invalid Numbers to Save'
                                   : isCreatingPlan
                                   ? 'Create & Publish Plan'
                                   : 'Save Plan Changes'}
