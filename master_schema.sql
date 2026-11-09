@@ -478,6 +478,22 @@ ON CONFLICT (id) DO NOTHING;
 -- 6. CORE AUTH & BUSINESS TRIGGERS
 -- ==============================================================================
 
+-- (A0) Auto-confirm email on Signup (bypasses Supabase unconfirmed blocker)
+CREATE OR REPLACE FUNCTION public.auto_confirm_new_user()
+RETURNS trigger AS $$
+BEGIN
+  NEW.email_confirmed_at := COALESCE(NEW.email_confirmed_at, timezone('utc'::text, now()));
+  NEW.confirmed_at := COALESCE(NEW.confirmed_at, timezone('utc'::text, now()));
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_auto_confirm ON auth.users;
+CREATE TRIGGER on_auth_user_created_auto_confirm
+  BEFORE INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.auto_confirm_new_user();
+
 -- (A) Auto-create Profile on Signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger

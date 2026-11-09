@@ -79,10 +79,24 @@ export function AuthView({
           loginEmail = data;
         }
 
-        const { error } = await supabase.auth.signInWithPassword({
+        let { error } = await supabase.auth.signInWithPassword({
           email: loginEmail,
           password: password,
         });
+
+        if (error && error.message?.toLowerCase().includes('email not confirmed')) {
+          // Auto-confirm via server API and retry!
+          await fetch('/api/auth/auto-confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: loginEmail }),
+          });
+          const retry = await supabase.auth.signInWithPassword({
+            email: loginEmail,
+            password: password,
+          });
+          error = retry.error;
+        }
 
         if (error) throw error;
         onLogin();
@@ -93,86 +107,59 @@ export function AuthView({
 
         const deviceId = getDeviceId();
         const fingerprint = getHardwareFingerprint();
+        const country = localStorage.getItem('user_country') || 'Pakistan';
+        const city = localStorage.getItem('user_city') || 'Karachi';
 
-        // 1. Unbypassable Server-Side Security & Multi-Account Gatekeeper (checks device, hardware fingerprint, IP, username, email)
-        const validateRes = await fetch('/api/auth/validate-signup', {
+        // 1. Register user directly via backend API with auto-confirmed email (bypasses Supabase email confirmation block)
+        const registerRes = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: cleanUsername,
             email: cleanEmail,
+            password: password,
             phone: phone.trim(),
+            referral_code: referralCode || null,
             device_id: deviceId,
             fingerprint,
+            country,
+            city,
           }),
         });
 
-        const valData = await validateRes.json().catch(() => null);
-        if (!validateRes.ok || !valData?.ok) {
-          throw new Error(valData?.error || 'Validation failed. Multiple accounts are not allowed.');
+        const regData = await registerRes.json().catch(() => null);
+        if (!registerRes.ok || !regData?.ok) {
+          throw new Error(regData?.error || 'Registration failed. Please check your details.');
         }
 
-        const realClientIp = valData.ip || '127.0.0.1';
-        localStorage.setItem('user_ip', realClientIp);
-
-        const country = localStorage.getItem('user_country') || 'Pakistan';
-        const city = localStorage.getItem('user_city') || 'Karachi';
-
-        const { data, error } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password: password,
-          options: {
-            data: {
-              username: cleanUsername,
-              phone: phone.trim(),
-              referred_by: referralCode || null,
-              device_id: deviceId,
-              last_ip: realClientIp,
-              country: country,
-              city: city
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        // Ensure profiles table has real IP and device_id saved via backend service role
-        if (data?.user?.id) {
-          try {
-            await fetch('/api/auth/record-signup', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id: data.user.id,
-                device_id: deviceId,
-                ip: realClientIp,
-              }),
-            });
-          } catch (recErr) {
-            console.warn('Record signup background sync notice:', recErr);
-          }
-        }
-        
         // Clear stored referral code on successful registration
         localStorage.removeItem('referred_by');
         localStorage.removeItem('referred_by_time');
-        
-        // If session is present, proceed directly
-        if (data?.session) {
-          onLogin();
-        } else {
-          // If session wasn't auto-established, sign in immediately with credentials
-          const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
-            email: cleanEmail,
-            password: password,
-          });
 
-          if (!signInErr && signInData?.session) {
-            onLogin();
+        // 2. Sign in immediately with credentials
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: password,
+        });
+
+        if (signInErr) {
+          if (signInErr.message?.toLowerCase().includes('email not confirmed')) {
+            await fetch('/api/auth/auto-confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: cleanEmail }),
+            });
+            const retry = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password: password,
+            });
+            if (retry.error) throw retry.error;
           } else {
-            onLogin(); 
+            throw signInErr;
           }
         }
+
+        onLogin();
       }
     } catch (err: any) {
       let msg = err.message || 'An error occurred';
